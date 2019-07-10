@@ -6,7 +6,17 @@
     "start": "heroku local:start",
     "super": "supervisor ./bin/www",
     "start_old": "node ./bin/www",
-    "test": "NODE_ENV=testing mocha -R spec"
+    "test": "NODE_ENV=testing mocha -R spec",
+    "migrate_local": ": ${DATABASE_URL:=sqlite://$(pwd)/quiz.sqlite} ; sequelize db:migrate --url $DATABASE_URL",
+    "seed_local": ": ${DATABASE_URL:=sqlite://$(pwd)/quiz.sqlite} ; sequelize db:seed:all --url $DATABASE_URL",
+    "migrate_win": "sequelize db:migrate --url %DATABASE_URL%",
+    "seed_win": "sequelize db:seed:all --url %DATABASE_URL%",
+    "open_heroku": "heroku open",
+    "migrate_heroku": "heroku run npx sequelize db:migrate --url \\$DATABASE_URL",
+    "seed_heroku": "heroku run npx sequelize db:seed:all --url \\$DATABASE_URL",
+    "reset_heroku": "heroku pg:reset DATABASE",
+    "mon_heroku": "heroku maintenance:on",
+    "moff_heroku": "heroku maintenance:off"
   },
   "engines": {
     "node": "10.15.1",
@@ -26,6 +36,7 @@
     "morgan": "~1.9.1",
     "pg": "^7.11.0",
     "sequelize": "^5.9.4",
+    "sequelize-cli": "^5.5.0",
     "serve-favicon": "^2.5.0",
     "supervisor": "^0.12.0"
   },
