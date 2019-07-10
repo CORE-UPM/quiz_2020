@@ -18,6 +18,18 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+// In production (Heroku) I redirect the HTTP requests to https.
+// Documentation: http://jaketrent.com/post/https-redirect-node-heroku/
+if (app.get('env') === 'production') {
+  app.use(function(req, res, next) {
+    if (req.headers['x-forwarded-proto'] !== 'https') {
+      res.redirect('https://' + req.get('Host') + req.url);
+    } else {
+      next()
+    }
+  });
+}
+
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
 app.use(express.json());
