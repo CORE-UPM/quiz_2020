@@ -1,0 +1,11 @@
+
+<h1>
+    Edit User:
+</h1>
+
+<form method="post" action="/users/<%= user.id %>?_method=PUT">
+    <% include _form.ejs %>
+
+    <input type="submit" value="Save" onclick="return validPassword()">
+</form>
+
