@@ -18,6 +18,10 @@ module.exports = function (sequelize, DataTypes) {
 
     class User extends Model {
 
+        verifyPassword(password) {
+            return crypt.encryptPassword(password, this.salt) === this.password;
+        }
+
         // Returns the ID of the given account type.
         // AccountTypeId of local accounts is 0.
         static accountTypeId(name) {
