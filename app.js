@@ -18,16 +18,34 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
-// In production (Heroku) I redirect the HTTP requests to https.
-// Documentation: http://jaketrent.com/post/https-redirect-node-heroku/
+// In production:
+//   * At Heroku:
+//        I redirect the HTTP requests to https.
+//        Documentation: http://jaketrent.com/post/https-redirect-node-heroku/
+//   * At quiz.dit.upm.es
+//        I redirect the HTTP requests to  https://quiz.dit.upm.es
+//
 if (app.get('env') === 'production') {
-  app.use(function(req, res, next) {
-    if (req.headers['x-forwarded-proto'] !== 'https') {
-      res.redirect('https://' + req.get('Host') + req.url);
-    } else {
-      next()
-    }
-  });
+    app.use(function (req, res, next) {
+
+        if (req.hostname === "quiz.dit.upm.es") { // WEB SERVER RUNNING AT quiz.dit.upm.es
+
+            if (req.protocol !== "https") {
+                console.log("Redirection from: Protocol =", req.protocol, " Hostname =", req.hostname);
+                res.redirect("https://quiz.dit.upm.es" + req.url);
+            } else {
+                next();
+            }
+
+        } else {  // WEB SERVER RUNNING AT HEROKU
+
+            if (req.headers['x-forwarded-proto'] !== 'https') {
+                res.redirect('https://' + req.get('Host') + req.url);
+            } else {
+                next()
+            }
+        }
+    });
 }
 
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
