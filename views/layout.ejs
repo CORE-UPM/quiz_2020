@@ -31,6 +31,39 @@
 
 
     <section class="main" id="mainSection">
+        <% if (messages.info) { %>
+            <article id='flashinfo'>
+                <h3>Information of interest:</h3>
+                <ul>
+                    <% for (var i in messages.info) { %>
+                        <li> <%= messages.info[i] %> </li>
+                    <% } %>
+                </ul>
+            </article>
+        <% } %>
+
+        <% if (messages.success) { %>
+            <article id='flashsuccess'>
+                <h3>Tasks completed successfully:</h3>
+                <ul>
+                    <% for (var i in messages.success) { %>
+                        <li> <%= messages.success[i] %> </li>
+                    <% } %>
+                </ul>
+            </article>
+        <% } %>
+
+        <% if (messages.error) { %>
+            <article id='flasherror'>
+                <h3>Errors:</h3>
+                <ul>
+                    <% for (var i in messages.error) { %>
+                        <li> <%= messages.error[i] %> </li>
+                    <% } %>
+                </ul>
+            </article>
+        <% } %>
+
         <%- body %>
 
         <% if (locals.paginate_control) { %>

@@ -97,13 +97,15 @@ exports.create = async (req, res, next) => {
     try {
         // Saves only the fields question and answer into the DDBB
         quiz = await quiz.save({fields: ["question", "answer"]});
+        req.flash('success', 'Quiz created successfully.');
         res.redirect('/quizzes/' + quiz.id);
     } catch (error) {
         if (error instanceof Sequelize.ValidationError) {
-            console.log('There are errors in the form:');
-            error.errors.forEach(({message}) => console.log(message));
+            req.flash('error', 'There are errors in the form:');
+            error.errors.forEach(({message}) => req.flash('error', message));
             res.render('quizzes/new', {quiz});
         } else {
+            req.flash('error', 'Error creating a new Quiz: ' + error.message);
             next(error);
         }
     }
@@ -130,13 +132,15 @@ exports.update = async (req, res, next) => {
 
     try {
         await quiz.save({fields: ["question", "answer"]});
+        req.flash('success', 'Quiz edited successfully.');
         res.redirect('/quizzes/' + quiz.id);
     } catch (error) {
         if (error instanceof Sequelize.ValidationError) {
-            console.log('There are errors in the form:');
-            error.errors.forEach(({message}) => console.log(message));
+            req.flash('error', 'There are errors in the form:');
+            error.errors.forEach(({message}) => req.flash('error', message));
             res.render('quizzes/edit', {quiz});
         } else {
+            req.flash('error', 'Error editing the Quiz: ' + error.message);
             next(error);
         }
     }
@@ -148,8 +152,10 @@ exports.destroy = async (req, res, next) => {
 
     try {
         await req.load.quiz.destroy();
+        req.flash('success', 'Quiz deleted successfully.');
         res.redirect('/quizzes');
     } catch (error) {
+        req.flash('error', 'Error deleting the Quiz: ' + error.message);
         next(error);
     }
 };
