@@ -1,4 +1,5 @@
 const Sequelize = require("sequelize");
+const Op = Sequelize.Op;
 const {models} = require("../models");
 
 const paginate = require('../helpers/paginate').paginate;
@@ -23,8 +24,18 @@ exports.load = async (req, res, next, quizId) => {
 // GET /quizzes
 exports.index = async (req, res, next) => {
 
+    let countOptions = {};
+
+    // Search:
+    const search = req.query.search || '';
+    if (search) {
+        const search_like = "%" + search.replace(/ +/g,"%") + "%";
+
+        countOptions.where = {question: { [Op.like]: search_like }};
+    }
+
     try {
-        const count = await models.quiz.count();
+        const count = await models.quiz.count(countOptions);
 
         // Pagination:
 
@@ -38,12 +49,16 @@ exports.index = async (req, res, next) => {
         res.locals.paginate_control = paginate(count, items_per_page, pageno, req.url);
 
         const findOptions = {
+            ...countOptions,
             offset: items_per_page * (pageno - 1),
             limit: items_per_page
         };
 
         const quizzes = await models.quiz.findAll(findOptions);
-        res.render('quizzes/index.ejs', {quizzes});
+        res.render('quizzes/index.ejs', {
+            quizzes,
+            search
+        });
     } catch (error) {
         next(error);
     }
