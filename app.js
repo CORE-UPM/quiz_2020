@@ -9,6 +9,7 @@ var SequelizeStore = require('connect-session-sequelize')(session.Store);
 var partials = require('express-partials');
 var flash = require('express-flash');
 var methodOverride = require('method-override');
+var redirectToHTTPS = require('express-http-to-https').redirectToHTTPS
 require('dotenv').config();
 
 const passport = require('passport');
@@ -20,6 +21,11 @@ var app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+
+// Redirect HTTP to HTTPS.
+// Don't redirect if the hostname is localhost:port (port=3000,5000)
+app.use(redirectToHTTPS([/localhost:(\d{4})/], [], 301));
+
 
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));
