@@ -1,0 +1,28 @@
+
+<h1>
+    Quizzes:
+</h1>
+
+<table>
+    <% for (var i in quizzes) { %>
+        <% var quiz = quizzes[i]; %>
+        <tr>
+            <td>
+                <a href="/quizzes/<%= quiz.id %>/play"><%= quiz.question %></a>
+            </td>
+            <td>
+                <a href="/quizzes/<%= quiz.id %>" class="button">Show</a>
+            </td>
+            <td>
+                <a href="/quizzes/<%= quiz.id %>/edit" class="button">Edit</a>
+            </td>
+            <td>
+                <a href="/quizzes/<%= quiz.id %>?_method=DELETE"
+                   onClick="return confirm('Delete: <%= quiz.question %>');"
+                   class="button">Delete</a>
+            </td>
+        </tr>
+    <% } %>
+</table>
+
+<a href="/quizzes/new" class="button">Create New Quiz</a>
