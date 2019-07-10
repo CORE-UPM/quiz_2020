@@ -88,6 +88,86 @@ a.button:hover {
 }
 
 
+#flashinfo {
+  width: auto;
+  border: 2px solid blue;
+  padding: 7px;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+#flashinfo h3 {
+  text-align: left;
+  font-weight: bold;
+  padding: 5px 5px 5px 15px;
+  font-size: 12px;
+  margin: -7px;
+  margin-bottom: 0px;
+  background-color: #00c;
+  color: #ffffff;
+}
+
+#flashinfo ul li {
+  margin: 5px 5px 5px 0px;
+  font-size: 12px;
+  list-style: square;
+}
+
+#flashsuccess {
+  width: auto;
+  border: 2px solid green;
+  padding: 7px;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+#flashsuccess h3 {
+  text-align: left;
+  font-weight: bold;
+  padding: 5px 5px 5px 15px;
+  font-size: 12px;
+  margin: -7px;
+  margin-bottom: 0px;
+  background-color: #0c0;
+}
+
+#flashsuccess ul li {
+  margin: 5px 5px 5px 0px;
+  font-size: 12px;
+  list-style: square;
+}
+
+#flasherror {
+  width: auto;
+  border: 2px solid red;
+  padding: 7px;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+  background-color: #f0f0f0;
+  color: #000;
+}
+
+#flasherror h3 {
+  text-align: left;
+  font-weight: bold;
+  padding: 5px 5px 5px 15px;
+  font-size: 12px;
+  margin: -7px;
+  margin-bottom: 0px;
+  background-color: #c00;
+}
+
+#flasherror ul li {
+  margin: 5px 5px 5px 0px;
+  font-size: 12px;
+  list-style: square;
+}
+
+
 .pagination {
   padding-left: 0;
   margin: 15px 0px 0px 0px;
