@@ -1,6 +1,39 @@
+
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font: 16px "Lucida Grande", Helvetica, Arial, sans-serif;
+  margin: 0;
+}
+
+#page {
+  display: flex;
+  flex-flow: row wrap;
+  margin: 2px auto;
+  padding: 0px;
+}
+
+.main {
+  flex: 1 100%;
+  border: 1px solid #999;
+  padding: 2px;
+  margin: 1px;
+  background: #eee;
+}
+
+#mainHeader, #mainNav, #mainFooter {
+  text-align: center;
+}
+
+#mainHeader h1 {
+  margin: 8px;
+}
+
+#mainNav a {
+  margin: 0px 5px;
+}
+
+#mainSection {
+  padding: 20px;
+  text-align: left;
 }
 
 a {
