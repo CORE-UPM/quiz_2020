@@ -17,6 +17,17 @@
 <body>
 <div id="page">
     <header class="main" id="mainHeader">
+
+        <div class="right">
+            <% if (!session.loginUser) { %>
+                <a href="/users/new">Register</a>
+                <a href="/login">Login</a>
+            <% } else { %>
+                <a href="/users/<%= session.loginUser.id %>"><%= session.loginUser.username %></a>
+                <a href="/login?_method=DELETE">Logout</a>
+            <% } %>
+        </div>
+
         <h1><span class="no-narrow">The</span> Quiz <span class="no-narrow">Site</span></h1>
     </header>
 
