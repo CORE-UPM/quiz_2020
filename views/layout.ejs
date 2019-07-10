@@ -26,8 +26,13 @@
         <a href="/author">Author</a>
     </nav>
 
+
     <section class="main" id="mainSection">
         <%- body %>
+
+        <% if (locals.paginate_control) { %>
+            <%- paginate_control %>
+        <% } %>
     </section>
 
     <footer class="main" id="mainFooter">
