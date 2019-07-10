@@ -6,7 +6,11 @@ const crypt = require('../helpers/crypt');
 
 module.exports = function (sequelize, DataTypes) {
 
-    class User extends Model {}
+    class User extends Model {
+        verifyPassword(password) {
+            return crypt.encryptPassword(password, this.salt) === this.password;
+        }
+    }
 
     User.init({
         username: {
