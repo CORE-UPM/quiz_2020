@@ -71,6 +71,7 @@ router.get('/author', (req, res, next) => {
 // Autoload for routes using :quizId
 router.param('quizId', quizController.load);
 router.param('userId', userController.load);
+router.param('tipId',  tipController.load);
 
 
 // Routes for the resource /users
@@ -146,6 +147,14 @@ router.get('/quizzes/:quizId(\\d+)/check', quizController.check);
 router.post('/quizzes/:quizId(\\d+)/tips',
     sessionController.loginRequired,
     tipController.create);
+router.put('/quizzes/:quizId(\\d+)/tips/:tipId(\\d+)/accept',
+    sessionController.loginRequired,
+    quizController.adminOrAuthorRequired,
+    tipController.accept);
+router.delete('/quizzes/:quizId(\\d+)/tips/:tipId(\\d+)',
+    sessionController.loginRequired,
+    quizController.adminOrAuthorRequired,
+    tipController.destroy);
 
 
 module.exports = router;

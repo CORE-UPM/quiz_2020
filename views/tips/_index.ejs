@@ -9,8 +9,39 @@
 
     <% } else { %>
 
+        <% var quizId = quiz.id; %>
+        <% var quizAuthorId = quiz.authorId; %>
+
+        <% var pendingModeration = false; %>
+
         <% for (var i in tips) { %>
-            <li> <%= tips[i].text %> </li>
+            <% var tip = tips[i]; %>
+
+            <% var accepted = tip.accepted; %>
+            <% var isAdmin = locals.loginUser && locals.loginUser.isAdmin; %>
+            <% var isQuizAuthor = locals.loginUser && quizAuthorId && quizAuthorId === locals.loginUser.id; %>
+
+            <% if (accepted || isAdmin || isQuizAuthor) { %>
+                <li>
+                    <%= tip.text %>
+
+                    <% if (!accepted && (isAdmin || isQuizAuthor)) { %>
+                        <a href="/quizzes/<%= quizId %>/tips/<%= tip.id %>/accept?_method=PUT"
+                           class="button">Accept</a>
+                    <% } %>
+
+                    <% if (isAdmin || isQuizAuthor) { %>
+                        <a href="/quizzes/<%= quizId %>/tips/<%= tip.id %>?_method=DELETE"
+                           class="button">Delete</a>
+                    <% } %>
+                </li>
+            <% } else { %>
+                <% pendingModeration = true; %>
+            <% } %>
+        <% } %>
+
+        <% if (pendingModeration) { %>
+            <li>There are tips pendings to be moderated.</li>
         <% } %>
 
     <% } %>
