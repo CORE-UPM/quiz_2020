@@ -95,6 +95,9 @@ app.use(function(req, res, next) {
         isAdmin: req.loginUser.isAdmin
     };
 
+    // To use req.url in the views
+    res.locals.url = req.url;
+
     next();
 });
 

@@ -71,6 +71,11 @@ a.button:hover {
   float: right;
 }
 
+.stars {
+  float: left;
+  clear: both;
+}
+
 /* ------------------------- */
 
 .wideRow {

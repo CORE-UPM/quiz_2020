@@ -20,13 +20,26 @@ const cloudinary_upload_options = {
 // Autoload el quiz asociado a :quizId
 exports.load = (req, res, next, quizId) => {
 
-    models.quiz.findByPk(quizId, {
+    const options = {
         include: [
             models.tip,
             models.attachment,
             {model: models.user, as: 'author'}
         ]
-    })
+    };
+
+    // For logged in users: include the favourites of the question by filtering by
+    // the logged in user with an OUTER JOIN.
+    if (req.loginUser) {
+        options.include.push({
+            model: models.user,
+            as: "fans",
+            where: {id: req.loginUser.id},
+            required: false  // OUTER JOIN
+        });
+    }
+
+    models.quiz.findByPk(quizId, options)
     .then(quiz => {
         if (quiz) {
             req.quiz = quiz;
@@ -58,8 +71,11 @@ exports.adminOrAuthorRequired = (req, res, next) => {
 exports.index = (req, res, next) => {
 
     let countOptions = {
-        where: {}
+        where: {},
+        include: []
     };
+
+    const searchfavourites = req.query.searchfavourites || "";
 
     let title = "Quizzes";
 
@@ -75,10 +91,38 @@ exports.index = (req, res, next) => {
     if (req.user) {
         countOptions.where.authorId = req.user.id;
 
-        if (req.loginUser && req.loginUser.id == req.user.id) {
+        if (req.loginUser && req.loginUser.id === req.user.id) {
             title = "My Quizzes";
         } else {
             title = "Quizzes of " + req.user.username;
+        }
+    }
+
+    // Filter: my favourite quizzes:
+    if (req.loginUser) {
+        if (searchfavourites) {
+            countOptions.include.push({
+                model: models.user,
+                as: "fans",
+                where: {id: req.loginUser.id},
+                attributes: ['id']
+
+            });
+        } else {
+
+            // NOTE:
+            // It should be added the options ( or similars )
+            // to have a lighter query:
+            //    where: {id: req.loginUser.id},
+            //    required: false  // OUTER JOIN
+            // but this does not work with SQLite. The generated
+            // query fails when there are several fans of the same quiz.
+
+            countOptions.include.push({
+                model: models.user,
+                as: "fans",
+                attributes: ['id']
+            });
         }
     }
 
@@ -99,21 +143,34 @@ exports.index = (req, res, next) => {
         const findOptions = {
             ...countOptions,
             offset: items_per_page * (pageno - 1),
-            limit: items_per_page,
-            include: [
-                models.attachment,
-                {model: models.user, as: 'author'}
-            ]
+            limit: items_per_page
         };
+
+        findOptions.include.push(models.attachment);
+        findOptions.include.push({
+            model: models.user,
+            as: 'author'
+        });
 
         return models.quiz.findAll(findOptions);
     })
     .then(quizzes => {
+
+        // Mark favourite quizzes:
+        if (req.loginUser) {
+            quizzes.forEach(quiz => {
+                quiz.favourite = quiz.fans.some(fan => {
+                    return fan.id == req.loginUser.id;
+                });
+            });
+        }
+
         res.render('quizzes/index.ejs', {
             quizzes,
             search,
-            attHelper,
-            title
+            searchfavourites,
+            title,
+            attHelper
         });
     })
     .catch(error => next(error));
@@ -125,10 +182,31 @@ exports.show = (req, res, next) => {
 
     const {quiz} = req;
 
-    res.render('quizzes/show', {
-        quiz,
-        attHelper
-    });
+    new Promise((resolve, reject) => {
+
+        // Only for logger users:
+        //   if this quiz is one of my fovourites, then I create
+        //   the attribute "favourite = true"
+        if (req.loginUser) {
+            resolve(
+                req.quiz.getFans({where: {id: req.loginUser.id}})
+                .then(fans => {
+                    if (fans.length > 0) {
+                        req.quiz.favourite = true;
+                    }
+                })
+            );
+        } else {
+            resolve();
+        }
+    })
+    .then(() => {
+        res.render('quizzes/show', {
+            quiz,
+            attHelper
+        });
+    })
+    .catch(error => next(error));
 };
 
 
@@ -372,11 +450,32 @@ exports.play = (req, res, next) => {
 
     const answer = query.answer || '';
 
-    res.render('quizzes/play', {
-        quiz,
-        answer,
-        attHelper
-    });
+    new Promise(function (resolve, reject) {
+
+        // Only for logger users:
+        //   if this quiz is one of my fovourites, then I create
+        //   the attribute "favourite = true"
+        if (req.loginUser) {
+            resolve(
+                req.quiz.getFans({where: {id: req.loginUser.id}})
+                .then(fans => {
+                    if (fans.length > 0) {
+                        req.quiz.favourite = true
+                    }
+                })
+            );
+        } else {
+            resolve();
+        }
+    })
+    .then(() => {
+        res.render('quizzes/play', {
+            quiz,
+            answer,
+            attHelper
+        });
+    })
+    .catch(error => next(error));
 };
 
 

@@ -45,8 +45,25 @@ attachment.hasOne(quiz);
 quiz.belongsTo(attachment);
 
 // Relation 1-to-1 between User and Attachment
-user.belongsTo(attachment, {as: "photo", foreignKey: 'photoId'});
 attachment.hasOne(user, {foreignKey: 'photoId'});
+user.belongsTo(attachment, {as: "photo", foreignKey: 'photoId'});
+
+// Relation 1-to-1 between Quiz and User:
+//    A User has many favourite quizzes.
+//    A quiz has many fans (the users who have marked it as favorite)
+quiz.belongsToMany(user, {
+    as: 'fans',
+    through: 'favourites',
+    foreignKey: 'quizId',
+    otherKey: 'userId'
+});
+
+user.belongsToMany(quiz, {
+    as: 'favouriteQuizzes',
+    through: 'favourites',
+    foreignKey: 'userId',
+    otherKey: 'quizId'
+});
 
 
 module.exports = sequelize;
