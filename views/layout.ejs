@@ -37,7 +37,9 @@
         <a href="/">Home</a>
         <a href="/quizzes">Quizzes</a>
         <a href="/author">Author</a>
-        <a href="/users">Users</a>
+        <% if (locals.loginUser) { %>
+            <a href="/users">Users</a>
+        <% } %>
     </nav>
 
 

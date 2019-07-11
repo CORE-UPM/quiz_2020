@@ -109,23 +109,53 @@ router.param('userId', userController.load);
 
 
 // Routes for the resource /users
-router.get('/users',                    userController.index);
-router.get('/users/:userId(\\d+)',      userController.show);
-router.get('/users/new',                userController.new);
-router.post('/users',                   userController.create);
-router.get('/users/:userId(\\d+)/edit', userController.isLocalRequired, userController.edit);
-router.put('/users/:userId(\\d+)',      userController.isLocalRequired, userController.update);
-router.delete('/users/:userId(\\d+)',   userController.destroy);
+router.get('/users',
+    sessionController.loginRequired,
+    userController.index);
+router.get('/users/:userId(\\d+)',
+    sessionController.loginRequired,
+    userController.show);
+router.get('/users/new',
+    userController.new);
+router.post('/users',
+    userController.create);
+router.get('/users/:userId(\\d+)/edit',
+    sessionController.loginRequired,
+    userController.isLocalRequired,
+    sessionController.adminOrMyselfRequired,
+    userController.edit);
+router.put('/users/:userId(\\d+)',
+    sessionController.loginRequired,
+    userController.isLocalRequired,
+    sessionController.adminOrMyselfRequired,
+    userController.update);
+router.delete('/users/:userId(\\d+)',
+    sessionController.loginRequired,
+    sessionController.adminOrMyselfRequired,
+    userController.destroy);
 
 
 // Routes for the resource /quizzes
-router.get('/quizzes',                     quizController.index);
-router.get('/quizzes/:quizId(\\d+)',       quizController.show);
-router.get('/quizzes/new',                 quizController.new);
-router.post('/quizzes',                    quizController.create);
-router.get('/quizzes/:quizId(\\d+)/edit',  quizController.edit);
-router.put('/quizzes/:quizId(\\d+)',       quizController.update);
-router.delete('/quizzes/:quizId(\\d+)',    quizController.destroy);
+router.get('/quizzes',
+    quizController.index);
+router.get('/quizzes/:quizId(\\d+)',
+    sessionController.loginRequired,
+    quizController.show);
+router.get('/quizzes/new',
+    sessionController.loginRequired,
+    quizController.new);
+router.post('/quizzes',
+    sessionController.loginRequired,
+    quizController.create);
+router.get('/quizzes/:quizId(\\d+)/edit',
+    sessionController.loginRequired,
+    quizController.edit);
+router.put('/quizzes/:quizId(\\d+)',
+    sessionController.loginRequired,
+    quizController.update);
+router.delete('/quizzes/:quizId(\\d+)',
+    sessionController.loginRequired,
+    quizController.destroy);
 
 router.get('/quizzes/:quizId(\\d+)/play',  quizController.play);
 router.get('/quizzes/:quizId(\\d+)/check', quizController.check);
