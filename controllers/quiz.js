@@ -7,7 +7,11 @@ const paginate = require('../helpers/paginate').paginate;
 // Autoload el quiz asociado a :quizId
 exports.load = (req, res, next, quizId) => {
 
-    models.quiz.findByPk(quizId)
+    models.quiz.findByPk(quizId, {
+        include: [
+            {model: models.user, as: 'author'}
+        ]
+    })
     .then(quiz => {
         if (quiz) {
             req.quiz = quiz;
@@ -17,6 +21,21 @@ exports.load = (req, res, next, quizId) => {
         }
     })
     .catch(error => next(error));
+};
+
+
+// MW that allows actions only if the user logged in is admin or is the author of the quiz.
+exports.adminOrAuthorRequired = (req, res, next) => {
+
+    const isAdmin  = !!req.loginUser.isAdmin;
+    const isAuthor = req.quiz.authorId === req.loginUser.id;
+
+    if (isAdmin || isAuthor) {
+        next();
+    } else {
+        console.log('Prohibited operation: The logged in user is not the author of the quiz, nor an administrator.');
+        res.send(403);
+    }
 };
 
 
@@ -50,7 +69,8 @@ exports.index = (req, res, next) => {
         const findOptions = {
             ...countOptions,
             offset: items_per_page * (pageno - 1),
-            limit: items_per_page
+            limit: items_per_page,
+            include: [{model: models.user, as: 'author'}]
         };
 
         return models.quiz.findAll(findOptions);
@@ -90,13 +110,16 @@ exports.create = (req, res, next) => {
 
     const {question, answer} = req.body;
 
+    const authorId = req.loginUser && req.loginUser.id || 0;
+
     const quiz = models.quiz.build({
         question,
-        answer
+        answer,
+        authorId
     });
 
     // Saves only the fields question and answer into the DDBB
-    quiz.save({fields: ["question", "answer"]})
+    quiz.save({fields: ["question", "answer", "authorId"]})
     .then(quiz => {
         req.flash('success', 'Quiz created successfully.');
         res.redirect('/quizzes/' + quiz.id)

@@ -114,6 +114,7 @@ router.get('/quizzes',
     quizController.index);
 router.get('/quizzes/:quizId(\\d+)',
     sessionController.loginRequired,
+    quizController.adminOrAuthorRequired,
     quizController.show);
 router.get('/quizzes/new',
     sessionController.loginRequired,
@@ -123,12 +124,15 @@ router.post('/quizzes',
     quizController.create);
 router.get('/quizzes/:quizId(\\d+)/edit',
     sessionController.loginRequired,
+    quizController.adminOrAuthorRequired,
     quizController.edit);
 router.put('/quizzes/:quizId(\\d+)',
     sessionController.loginRequired,
+    quizController.adminOrAuthorRequired,
     quizController.update);
 router.delete('/quizzes/:quizId(\\d+)',
     sessionController.loginRequired,
+    quizController.adminOrAuthorRequired,
     quizController.destroy);
 
 router.get('/quizzes/:quizId(\\d+)/play',  quizController.play);

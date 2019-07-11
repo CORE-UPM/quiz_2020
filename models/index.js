@@ -21,4 +21,14 @@ sequelize.import(path.join(__dirname,'user'));
 // Session
 sequelize.import(path.join(__dirname,'session'));
 
+
+// Relation between models
+
+const {quiz, user} = sequelize.models;
+
+// Relation 1-to-N between User and Quiz:
+user.hasMany(quiz, {foreignKey: 'authorId'});
+quiz.belongsTo(user, {as: 'author', foreignKey: 'authorId'});
+
+
 module.exports = sequelize;
