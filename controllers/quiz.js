@@ -11,20 +11,31 @@ const paginate = require('../helpers/paginate').paginate;
 // Autoload el quiz asociado a :quizId
 exports.load = async (req, res, next, quizId) => {
 
-    try {
-        const quiz = await models.Quiz.findByPk(quizId, {
-            include: [
-                {model: models.Attachment, as: 'attachment'},
-                {
-                    model: models.User,
-                    as: 'author',
-                    include: [{
-                        model: models.Attachment,
-                        as: "photo"
-                    }]
-                }
-            ]
+    const options = {
+        include: [
+            {model: models.Attachment, as: 'attachment'},
+            {
+                model: models.User, as: 'author',
+                include: [{
+                    model: models.Attachment,
+                    as: "photo"
+                }]
+            }]
+    };
+
+    // For logged in users: include the favourites of the question by filtering by
+    // the logged in user with an OUTER JOIN.
+    if (req.loginUser) {
+        options.include.push({
+            model: models.User,
+            as: "fans",
+            where: {id: req.loginUser.id},
+            required: false  // OUTER JOIN
         });
+    }
+
+    try {
+        const quiz = await models.Quiz.findByPk(quizId, options);
         if (quiz) {
             req.load = {...req.load, quiz};
             next();
@@ -87,11 +98,15 @@ exports.adminOrAuthorRequired = (req, res, next) => {
 exports.index = async (req, res, next) => {
 
     let countOptions = {
-        where: {}
+        where: {},
+        include: []
     };
     let findOptions = {
-        where: {}
+        where: {},
+        include: []
     };
+
+    const searchfavourites = req.query.searchfavourites || "";
 
     let title = "Quizzes";
 
@@ -109,10 +124,39 @@ exports.index = async (req, res, next) => {
         countOptions.where.authorId = req.load.user.id;
         findOptions.where.authorId = req.load.user.id;
 
-        if (req.loginUser && req.loginUser.id == req.load.user.id) {
+        if (req.loginUser && req.loginUser.id === req.load.user.id) {
             title = "My Quizzes";
         } else {
             title = "Quizzes of " + req.load.user.username;
+        }
+    }
+
+    // Filter: my favourite quizzes:
+    if (req.loginUser) {
+        if (searchfavourites) {
+            const includeMyFans = {
+                model: models.User,
+                as: "fans",
+                where: {id: req.loginUser.id},
+                attributes: ['id']
+            };
+            countOptions.include.push(includeMyFans);
+            findOptions.include.push(includeMyFans);
+        } else {
+
+            // NOTE:
+            // It should be added the options ( or similars )
+            // to have a lighter query:
+            //    where: {id: req.loginUser.id},
+            //    required: false  // OUTER JOIN
+            // but this does not work with SQLite. The generated
+            // query fails when there are several fans of the same quiz.
+
+            findOptions.include.push({
+                model: models.User,
+                as: "fans",
+                attributes: ['id']
+            });
         }
     }
 
@@ -130,26 +174,39 @@ exports.index = async (req, res, next) => {
         // This String is added to a local variable of res, which is used into the application layout file.
         res.locals.paginate_control = paginate(count, items_per_page, pageno, req.url);
 
+
         findOptions.offset = items_per_page * (pageno - 1);
         findOptions.limit = items_per_page;
-        findOptions.include = [
-                {model: models.Attachment, as: 'attachment'},
-                {
-                    model: models.User,
-                    as: 'author',
-                    include: [{
-                        model: models.Attachment,
-                        as: "photo"
-                    }]
-                }
-            ];
+
+        findOptions.include.push({
+            model: models.Attachment,
+            as: 'attachment'
+        });
+        findOptions.include.push({
+            model: models.User,
+            as: 'author',
+            include: [{
+                model: models.Attachment,
+                as: "photo"
+            }]
+        });
 
         const quizzes = await models.Quiz.findAll(findOptions);
+
+        // Mark favourite quizzes:
+        if (req.loginUser) {
+            quizzes.forEach(quiz => {
+                quiz.favourite = quiz.fans.some(fan => {
+                    return fan.id == req.loginUser.id;
+                });
+            });
+        }
         res.render('quizzes/index.ejs', {
             quizzes,
             search,
-            attHelper,
-            title
+            searchfavourites,
+            title,
+            attHelper
         });
     } catch (error) {
         next(error);
@@ -158,14 +215,28 @@ exports.index = async (req, res, next) => {
 
 
 // GET /quizzes/:quizId
-exports.show = (req, res, next) => {
+exports.show = async (req, res, next) => {
 
     const {quiz} = req.load;
 
-    res.render('quizzes/show', {
-        quiz,
-        attHelper
-    });
+    try {
+        // Only for logger users:
+        //   if this quiz is one of my fovourites, then I create
+        //   the attribute "favourite = true"
+        if (req.loginUser) {
+            const fans = await quiz.getFans({where: {id: req.loginUser.id}});
+            if (fans.length > 0) {
+                quiz.favourite = true;
+            }
+        }
+
+        res.render('quizzes/show', {
+            quiz,
+            attHelper
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 
@@ -352,18 +423,32 @@ exports.destroy = async (req, res, next) => {
 
 
 // GET /quizzes/:quizId/play
-exports.play = (req, res, next) => {
+exports.play = async (req, res, next) => {
 
     const {query} = req;
-        const {quiz} = req.load;
+    const {quiz} = req.load;
 
     const answer = query.answer || '';
 
-    res.render('quizzes/play', {
-        quiz,
-        answer,
-        attHelper
-    });
+    try {
+        // Only for logger users:
+        //   if this quiz is one of my fovourites, then I create
+        //   the attribute "favourite = true"
+        if (req.loginUser) {
+            const fans = await quiz.getFans({where: {id: req.loginUser.id}});
+            if (fans.length > 0) {
+                quiz.favourite = true
+            }
+        }
+
+        res.render('quizzes/play', {
+            quiz,
+            answer,
+            attHelper
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 

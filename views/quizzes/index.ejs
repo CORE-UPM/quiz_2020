@@ -1,8 +1,20 @@
 
 <div class="right">
-    <form method="get" action="/quizzes">
+    <form method="get" action="<%= url %>">
         <input type="text" name="search" value="<%= locals.search || '' %>" placeholder="question to search" autocomplete="off" />
         <input type="submit" value="Search">
+
+        <% if (locals.loginUser) { %>
+            <br/>
+
+            <div>
+                <label>Solo favoritos:</label>
+                <input type="checkbox" name="searchfavourites"
+                       value="1" <%= locals.searchfavourites ? 'checked' : '' %> >
+                <img class="star" src="/images/star_yellow.png" \>
+            </div>
+        <% } %>
+
     </form>
 </div>
 
@@ -20,6 +32,8 @@
             </td>
 
             <td>
+                <% include ../favourites/_stars.ejs %>
+
                 <a href="/quizzes/<%= quiz.id %>/play"><%= quiz.question %></a>
             </td>
 
