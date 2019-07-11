@@ -15,12 +15,14 @@
 
 </ul>
 
-<p>
-    <a href="/users/<%= user.id %>/edit" class="button">Edit</a>
+<% if (locals.loginUser && (locals.loginUser.isAdmin || locals.loginUser.id === user.id)) { %>
+    <p>
+        <a href="/users/<%= user.id %>/edit" class="button">Edit</a>
 
-    <a href="/users/<%= user.id %>?_method=DELETE"
-       onClick="return confirm('Delete user: <%= user.username %>');"
-       class="button">Delete</a>
-</p>
+        <a href="/users/<%= user.id %>?_method=DELETE"
+           onClick="return confirm('Delete user: <%= user.username %>');"
+           class="button">Delete</a>
+    </p>
+<% } %>
 
 <a href="/goback" class="button">Go back</a>

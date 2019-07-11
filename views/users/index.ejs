@@ -9,16 +9,22 @@
                 <a href="/users/<%= users[i].id %>" ><%= users[i].username %></a>
                 <%= users[i].isAdmin ? "(admin)" : "" %>
             </td>
-            <td>
-                <a href="/users/<%= users[i].id %>/edit" class="button">Edit</a>
-            </td>
-            <td>
-                <a href="/users/<%= users[i].id %>?_method=DELETE"
-                   onClick="return confirm('Delete user: <%= users[i].username %>');"
-                   class="button">Delete</a>
-            </td>
+
+            <% if (locals.loginUser && (locals.loginUser.isAdmin || locals.loginUser.id === users[i].id)) { %>
+                <td>
+                    <a href="/users/<%= users[i].id %>/edit" class="button">Edit</a>
+                </td>
+
+                <td>
+                    <a href="/users/<%= users[i].id %>?_method=DELETE"
+                       onClick="return confirm('Delete user: <%= users[i].username %>');"
+                       class="button">Delete</a>
+                </td>
+            <% } %>
         </tr>
     <%  } %>
 </table>
 
-<a href="/users/new" class="button">Create new user</a>
+<% if (locals.loginUser && locals.loginUser.isAdmin) { %>
+    <a href="/users/new" class="button">Create new user</a>
+<% } %>
