@@ -8,7 +8,11 @@ const paginate = require('../helpers/paginate').paginate;
 exports.load = async (req, res, next, quizId) => {
 
     try {
-        const quiz = await models.quiz.findByPk(quizId);
+        const quiz = await models.quiz.findByPk(quizId, {
+            include: [
+                {model: models.user, as: 'author'}
+            ]
+        });
         if (quiz) {
             req.quiz = quiz;
             next();
@@ -17,6 +21,21 @@ exports.load = async (req, res, next, quizId) => {
         }
     } catch (error) {
         next(error);
+    }
+};
+
+
+// MW that allows actions only if the user logged in is admin or is the author of the quiz.
+exports.adminOrAuthorRequired = (req, res, next) => {
+
+    const isAdmin  = !!req.loginUser.isAdmin;
+    const isAuthor = req.quiz.authorId === req.loginUser.id;
+
+    if (isAdmin || isAuthor) {
+        next();
+    } else {
+        console.log('Prohibited operation: The logged in user is not the author of the quiz, nor an administrator.');
+        res.send(403);
     }
 };
 
@@ -51,7 +70,8 @@ exports.index = async (req, res, next) => {
         const findOptions = {
             ...countOptions,
             offset: items_per_page * (pageno - 1),
-            limit: items_per_page
+            limit: items_per_page,
+            include: [{model: models.user, as: 'author'}]
         };
 
         const quizzes = await models.quiz.findAll(findOptions);
@@ -90,14 +110,17 @@ exports.create = async (req, res, next) => {
 
     const {question, answer} = req.body;
 
+    const authorId = req.loginUser && req.loginUser.id || 0;
+
     let quiz = models.quiz.build({
         question,
-        answer
+        answer,
+        authorId
     });
 
     try {
         // Saves only the fields question and answer into the DDBB
-        quiz = await quiz.save({fields: ["question", "answer"]});
+        quiz = await quiz.save({fields: ["question", "answer", "authorId"]});
         req.flash('success', 'Quiz created successfully.');
         res.redirect('/quizzes/' + quiz.id);
     } catch (error) {
