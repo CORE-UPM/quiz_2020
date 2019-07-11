@@ -12,8 +12,7 @@ const LocalStrategy = require('passport-local').Strategy;
 // then the user's session will be closed.
 // The value is in milliseconds.
 // 5 minutes.
-const maxIdleTime = 5*60*1000;
-
+const maxIdleTime = 5 * 60 * 1000;
 
 
 // Middleware to create req.session.loginExpires, which is the current inactivity time
@@ -30,8 +29,8 @@ exports.createLoginExpires = (req, res, next) => {
 // If the inactivity time has been exceeded, then the user session is destroyed.
 exports.checkLoginExpires = (req, res, next) => {
 
-    if (req.session.loginExpires ) { // There exist a user session
-        if ( req.session.loginExpires < Date.now() ) { // Expired
+    if (req.session.loginExpires) { // There exist a user session
+        if (req.session.loginExpires < Date.now()) { // Expired
 
             delete req.session.loginExpires;
 
@@ -47,6 +46,54 @@ exports.checkLoginExpires = (req, res, next) => {
     }
     // Continue with the request
     next();
+};
+
+
+// Middleware: Login required.
+//
+// If the user is logged in previously then there will exists
+// the req.loginUser object, so I continue with the others
+// middlewares or routes.
+// If req.loginUser does not exist, then nobody is logged,
+// so I redirect to the login screen.
+//
+exports.loginRequired = function (req, res, next) {
+    if (req.loginUser) {
+        next();
+    } else {
+        req.flash("info", "Login required: log in and retry.");
+        res.redirect('/login');
+    }
+};
+
+
+// MW that allows to pass only if the logged useer in is admin.
+exports.adminRequired = (req, res, next) => {
+
+    const isAdmin = !!req.loginUser.isAdmin;
+
+    if (isAdmin) {
+        next();
+    } else {
+        console.log('Prohibited route: the logged in user is not an administrator.');
+        res.send(403);
+    }
+};
+
+// MW that allows to pass only if the logged in user is:
+// - admin
+// - or is the user to be managed.
+exports.adminOrMyselfRequired = (req, res, next) => {
+
+    const isAdmin = !!req.loginUser.isAdmin;
+    const isMyself = req.user.id === req.loginUser.id;
+
+    if (isAdmin || isMyself) {
+        next();
+    } else {
+        console.log('Prohibited route: it is not the logged in user, nor an administrator.');
+        res.send(403);
+    }
 };
 
 
@@ -85,7 +132,7 @@ passport.use(new LocalStrategy(
  * Serialize user to be saved into req.session.passport.
  * It only saves the id of the user.
  */
-passport.serializeUser(function(user, done) {
+passport.serializeUser(function (user, done) {
 
     done(null, user.id);
 });
