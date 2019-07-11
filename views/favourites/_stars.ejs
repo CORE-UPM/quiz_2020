@@ -1,0 +1,42 @@
+
+<!--
+    Add the appropriate star to the quiz given into the parameter.
+
+     Only the star is only shown if there is a user logged in.
+     Depending on the value of the favorite attribute, the star is gray or yellow.
+     An onclick is registered to send AJAX requests and repaint the star if OK.
+-->
+
+<% if (locals.loginUser) { %>
+
+    <img id="star<%= quiz.id %>" width="30px" height="30px" />
+
+    <br />
+
+    <script>
+        (function() {
+            var state =  <%= !!quiz.favourite %>;
+            var userId = <%= locals.loginUser.id %>;
+            var quizId = <%= quiz.id %>;
+
+            var img = document.getElementById("star<%= quiz.id %>");
+            img.src = state ? "/images/star_yellow.png" : "/images/star_grey.png";
+            img.onclick = function() {
+                var request = new XMLHttpRequest();
+                var method = state ? "DELETE" : "PUT";
+                var url = "/users/" + userId + "/favourites/" + quizId + "?_method=" + method;
+                request.open("POST", url);
+                request.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+                request.onreadystatechange = function() {
+                    if (request.readyState === 4 && request.status === 200) {
+                        img.src = state ? "/images/star_grey.png" : "/images/star_yellow.png";
+                        state = !state;
+                    }
+                };
+                request.send();
+                return false;
+            };
+        })();
+    </script>
+
+<% } %>
