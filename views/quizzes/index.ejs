@@ -17,8 +17,11 @@
             <td>
                 <a href="/quizzes/<%= quiz.id %>/play"><%= quiz.question %></a>
             </td>
+            <td colspan="2">
+                <small> (by <%= quiz.author ? quiz.author.displayName : "Anonymous" %>) </small>
+            </td>
 
-            <% if (locals.loginUser) { %>
+            <% if (locals.loginUser && (locals.loginUser.isAdmin || locals.loginUser.id === quiz.authorId)) { %>
                 <td>
                     <a href="/quizzes/<%= quiz.id %>" class="button">Show</a>
                 </td>
