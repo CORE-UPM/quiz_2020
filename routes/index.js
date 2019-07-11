@@ -1,6 +1,11 @@
 var express = require('express');
 var router = express.Router();
 
+const multer = require('multer');
+const upload = multer({
+    dest: './uploads/',
+    limits: {fileSize: 2 * 1024 * 1024}});
+
 const quizController = require('../controllers/quiz');
 const tipController = require('../controllers/tip');
 const userController = require('../controllers/user');
@@ -127,6 +132,7 @@ router.get('/quizzes/new',
     quizController.new);
 router.post('/quizzes',
     sessionController.loginRequired,
+    upload.single('image'),
     quizController.create);
 router.get('/quizzes/:quizId(\\d+)/edit',
     sessionController.loginRequired,
@@ -135,6 +141,7 @@ router.get('/quizzes/:quizId(\\d+)/edit',
 router.put('/quizzes/:quizId(\\d+)',
     sessionController.loginRequired,
     quizController.adminOrAuthorRequired,
+    upload.single('image'),
     quizController.update);
 router.delete('/quizzes/:quizId(\\d+)',
     sessionController.loginRequired,

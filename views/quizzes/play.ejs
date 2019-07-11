@@ -1,22 +1,30 @@
 
-<div class="right">
-    <small> (by <%= quiz.author ? quiz.author.username : "Anonymous" %>) </small>
-</div>
-
 <h1>
     Play:
 </h1>
 
 <form method="get" action="/quizzes/<%= quiz.id %>/check">
-    <p>
-        Question: <b><%= quiz.question %></b>
-    </p>
 
 
-    <div class="wideRow">
-        <input type="text" class="itemWide" name="answer" value="<%= answer %>" placeholder="Answer" autocomplete="off"/>
-        <input type="submit" class="itemNarrow" value="Check">
+    <div class="quizItem">
+
+        <div>
+            <% var attachment = quiz.attachment; %>
+            <% include ../attachments/_show %>
+        </div>
+
+        <div>
+            <b><%= quiz.question %></b>
+
+            <div class="wideRow">
+                <input type="text" class="itemWide" name="answer" value="<%= answer %>" placeholder="Answer" autocomplete="off"/>
+                <input type="submit" class="itemNarrow" value="Check">
+            </div>
+
+            <small> by <%= quiz.author ? quiz.author.username : "Anonymous" %> </small>
+        </div>
     </div>
+
 </form>
 
 
