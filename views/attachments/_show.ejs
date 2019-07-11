@@ -11,22 +11,22 @@
                 attachment.mime === "image/png" ||
                 attachment.mime === "image/gif" ) { %>
 
-            <%- cloudinary.image(attachment.public_id, {width: 150, secure: true}) %>
+            <%- attHelper.image(attachment.public_id, {width: 150, secure: true}) %>
 
-        <% } else if ( attachment.mime === "video/mp4" ) {  %>
+        <% } else if ( attachment.mime === "video/mp4" ) { %>
 
-            <%- cloudinary.video(attachment.public_id, {width: 150, controls: false, secure: true}) %>
+            <%- attHelper.video(attachment.public_id, {width: 150, controls: false, secure: true}) %>
 
-        <% } else if ( attachment.mime === "application/pdf" ) {  %>
+        <% } else if ( attachment.mime === "application/pdf" ) { %>
 
-            <%- cloudinary.image(attachment.public_id, {width: 150, format: "jpg", secure: true}) %>
+            <%- attHelper.image(attachment.public_id, {width: 150, format: "jpg", secure: true}) %>
 
-        <% } else {  %>
+        <% } else { %>
 
             <img src='/images/doc.png' width="150px"/>
 
         <% } %>
     </a>
 <% } else { %>
-    <img src="/images/none.png" width="50px" />
+    <img src="/images/none.png" width="50px"/>
 <% } %>

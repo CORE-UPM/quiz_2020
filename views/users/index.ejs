@@ -7,7 +7,7 @@
         <tr>
             <td>
                 <% if (users[i].photo) { %>
-                    <img src="<%= users[i].photo.url %>" width="100px"/>
+                    <%- attHelper.image(users[i].photo.public_id, {width: 100, secure: true}) %>
                 <% } else { %>
                     <img src="/images/face.png" width="100px"/>
                 <% } %>

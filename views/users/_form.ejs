@@ -48,7 +48,7 @@
             </div>
 
         <% if (user.photo) { %>
-                <img src="<%= user.photo.url %>" width="200px"/>
+                <%- attHelper.image(user.photo.public_id, {width: 200, secure: true}) %>
             <% } else { %>
                 <img src="/images/face.png" width="200px"/>
             <% } %>

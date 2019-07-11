@@ -65,7 +65,7 @@ exports.index = (req, res, next) => {
     .then(users => {
         res.render('users/index', {
             users,
-            cloudinary
+            attHelper
         });
     })
     .catch(error => next(error));
@@ -78,7 +78,7 @@ exports.show = (req, res, next) => {
 
     res.render('users/show', {
         user,
-        cloudinary
+        attHelper
     });
 };
 
@@ -91,7 +91,10 @@ exports.new = (req, res, next) => {
         password: ""
     };
 
-    res.render('users/new', {user});
+    res.render('users/new', {
+        user,
+        attHelper
+    });
 };
 
 
@@ -120,11 +123,18 @@ exports.create = (req, res, next) => {
             return;
         }
 
-        // Save the photo into  Cloudinary
-        return attHelper.checksCloudinaryEnv()
-        .then(() => {
-            return attHelper.uploadResourceToCloudinary(req.file.path, cloudinary_upload_options);
-        })
+        // Save the photo into Cloudinary or local file system:
+
+        let upload_options;
+        if (!process.env.CLOUDINARY_URL) {
+            req.flash('info', 'Photo files are saved into the local file system.');
+            upload_options = {urlPrefix: req.protocol + "://" + req.headers.host };
+        } else {
+            req.flash('info', 'Photo files are saved at Cloudinary.');
+            upload_options = cloudinary_upload_options;
+        }
+
+        return attHelper.uploadResource(req.file.path, upload_options)
         .then(uploadResult => {
 
             // Create the new photo into the data base.
@@ -142,9 +152,8 @@ exports.create = (req, res, next) => {
             })
             .catch(error => { // Ignoring validation errors
                 req.flash('error', 'Failed to save file: ' + error.message);
-                cloudinary.api.delete_resources(uploadResult.public_id);
+                attHelper.deleteResource(uploadResult.public_id);
             });
-
         })
         .catch(error => {
             req.flash('error', 'Failed to save photo: ' + error.message);
@@ -159,12 +168,12 @@ exports.create = (req, res, next) => {
     })
     .catch(Sequelize.UniqueConstraintError, error => {
         req.flash('error', `User "${username}" already exists.`);
-        res.render('users/new', {user});
+        res.render('users/new', {user, attHelper});
     })
     .catch(Sequelize.ValidationError, error => {
         req.flash('error', 'There are errors in the form:');
         error.errors.forEach(({message}) => req.flash('error', message));
-        res.render('users/new', {user});
+        res.render('users/new', {user, attHelper});
     })
     .catch(error => {
         req.flash('error', 'Error creating a new User: ' + error.message);
@@ -188,7 +197,10 @@ exports.edit = (req, res, next) => {
 
     const {user} = req;
 
-    res.render('users/edit', {user});
+    res.render('users/edit', {
+        user,
+        attHelper
+    });
 };
 
 
@@ -219,17 +231,24 @@ exports.update = (req, res, next) => {
         if (!req.file) {
             req.flash('info', 'This user has no photo.');
             if (user.photo) {
-                cloudinary.api.delete_resources(user.photo.public_id);
+                attHelper.deleteResource(user.photo.public_id);
                 user.photo.destroy();
             }
             return;
         }
 
-        // Save the new attachment into Cloudinary:
-        return attHelper.checksCloudinaryEnv()
-        .then(() => {
-            return attHelper.uploadResourceToCloudinary(req.file.path, cloudinary_upload_options);
-        })
+        // Save the new attachment into Cloudinary or local file system:
+
+        let upload_options;
+        if (!process.env.CLOUDINARY_URL) {
+            req.flash('info', 'Photo files are saved into the local file system.');
+            upload_options = {urlPrefix: req.protocol + "://" + req.headers.host };
+        } else {
+            req.flash('info', 'Photo files are saved at Cloudinary.');
+            upload_options = cloudinary_upload_options;
+        }
+
+        return attHelper.uploadResource(req.file.path, upload_options)
         .then(function (uploadResult) {
 
             // Remenber the public_id of the old photo.
@@ -249,7 +268,7 @@ exports.update = (req, res, next) => {
             })
             .then(attachment => {
                 if (old_public_id) {
-                    cloudinary.api.delete_resources(old_public_id);
+                    attHelper.deleteResource(old_public_id);
                 }
                 return user.setPhoto(attachment)
             })
@@ -257,8 +276,8 @@ exports.update = (req, res, next) => {
                 req.flash('success', 'Photo updated successfully.');
             })
             .catch(error => { // Ignoring image validation errors
-                req.flash('error', 'Failed updated new photo: ' + error.message);
-                cloudinary.api.delete_resources(uploadResult.public_id);
+                req.flash('error', 'Failed updating new photo: ' + error.message);
+                attHelper.deleteResource(uploadResult.public_id);
             });
         })
         .catch(function (error) {
@@ -271,7 +290,7 @@ exports.update = (req, res, next) => {
     .catch(Sequelize.ValidationError, error => {
         req.flash('error', 'There are errors in the form:');
         error.errors.forEach(({message}) => req.flash('error', message));
-        res.render('users/edit', {user});
+        res.render('users/edit', {user, attHelper});
     })
     .catch(error => {
         req.flash('error', 'Error editing the User: ' + error.message);
@@ -293,13 +312,18 @@ exports.update = (req, res, next) => {
 // DELETE /users/:userId
 exports.destroy = (req, res, next) => {
 
-    // Delete the photo at Cloudinary (result is ignored)
+    // Delete the photo at Cloudinary or local file system (result is ignored)
     if (req.user.photo) {
-        attHelper.checksCloudinaryEnv()
-        .then(() => {
-            cloudinary.api.delete_resources(req.user.photo.public_id);
-        });
+
+        if (!process.env.CLOUDINARY_URL) {
+            req.flash('info', 'Photo files are saved into the local file system.');
+        } else {
+            req.flash('info', 'Photo files are saved at Cloudinary.');
+        }
+
+        attHelper.deleteResource(req.user.photo.public_id);
     }
+
     req.user.destroy()
     .then(() => {
 
