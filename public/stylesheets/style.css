@@ -71,6 +71,16 @@ a.button:hover {
   float: right;
 }
 
+.attachment {
+  border-radius: 10px;
+  border: 2px solid #00f;
+  object-fit: cover;
+  width: 100px;
+  height: 100px;
+}
+
+/* ------------------------- */
+
 .wideRow {
   display: flex;
   flex-flow: row wrap;
@@ -92,6 +102,79 @@ a.button:hover {
   height: 24px;
   vertical-align: middle;
 }
+
+/* ------------------------- */
+
+#quizzesIndex {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#quizzesIndex tr {
+  background-color: #e5e5e5;
+
+  border: 1px dotted #636363;
+  border-radius: 5px;
+}
+
+#quizzesIndex tr:nth-child(even) {
+  background-color: #cfcfcf
+}
+
+#quizzesIndex td {
+  padding: 3px;
+  margin: 2px;
+}
+
+#quizzesIndex tr td:nth-child(1) {
+  text-align: center;
+  width: 150px;
+}
+
+#quizzesIndex tr td:nth-child(2) {
+  vertical-align: top;
+  text-align: left;
+}
+
+#quizzesIndex tr td:nth-child(3) {
+  vertical-align: bottom;
+  text-align: right;
+}
+
+/* ------------------------- */
+
+.quizItem {
+  display: flex;
+  flex-flow: row wrap;
+  align-content: stretch;
+
+  width: 100%;
+  border: 1px dotted #636363;
+  border-radius: 5px;
+  background-color: #e5e5e5;
+
+  margin: 10px 0px;
+}
+
+.quizItem div {
+  padding: 5px;
+  margin: 2px;
+}
+
+.quizItem div:nth-child(1) {
+  flex: 0 auto;
+
+  text-align: center;
+  width: 150px;
+}
+
+.quizItem div:nth-child(2) {
+  flex: 1 auto;
+
+  text-align: left;
+}
+
+/* ------------------------- */
 
 #flashinfo {
   width: auto;

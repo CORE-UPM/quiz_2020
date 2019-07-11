@@ -1,0 +1,31 @@
+<% if (attachment) { %>
+
+    <a href='<%= attachment.url %>'
+       type='<%= attachment.mime %>'
+       target='_blank'>
+
+        <% if ( attachment.mime === "image/jpeg" ||
+                attachment.mime === "image/gif" ||
+                attachment.mime === "image/jpg" ||
+                attachment.mime === "image/png" ||
+                attachment.mime === "image/gif" ) { %>
+
+            <%- attHelper.image(attachment.url) %>
+
+        <% } else if ( attachment.mime === "video/mp4" ) { %>
+
+            <%- attHelper.video(attachment.url) %>
+
+        <% } else if ( attachment.mime === "application/pdf" ) { %>
+
+            <%- attHelper.image('/images/pdf.png') %>
+
+        <% } else { %>
+
+            <%- attHelper.image('/images/doc.png') %>
+
+        <% } %>
+    </a>
+<% } else { %>
+    <img src="/images/none.png" width="100px"/>
+<% } %>
