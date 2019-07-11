@@ -53,10 +53,11 @@ function saveBack(req, res, next) {
 //   /new, /edit, /play, /check, /login or /:id.
 router.get(
     [
-        '/',
-        '/author',
-        '/users',
-        '/quizzes'
+      '/',
+      '/author',
+      '/users',
+      '/users/:id(\\d+)/quizzes',
+      '/quizzes'
     ],
     saveBack);
 
@@ -117,6 +118,9 @@ router.delete('/users/:userId(\\d+)',
     sessionController.adminOrMyselfRequired,
     userController.destroy);
 
+router.get('/users/:userId(\\d+)/quizzes',
+    sessionController.loginRequired,
+    quizController.index);
 
 // Routes for the resource /quizzes
 router.get('/quizzes',

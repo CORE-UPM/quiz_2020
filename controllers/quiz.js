@@ -43,16 +43,34 @@ exports.adminOrAuthorRequired = (req, res, next) => {
 // GET /quizzes
 exports.index = async (req, res, next) => {
 
-    let countOptions = {};
-    let findOptions = {};
+    let countOptions = {
+        where: {}
+    };
+    let findOptions = {
+        where: {}
+    };
+
+    let title = "Quizzes";
 
     // Search:
     const search = req.query.search || '';
     if (search) {
         const search_like = "%" + search.replace(/ +/g,"%") + "%";
 
-        countOptions.where = {question: { [Op.like]: search_like }};
-        findOptions.where = {question: { [Op.like]: search_like }};
+        countOptions.where.question = { [Op.like]: search_like };
+        findOptions.where.question = { [Op.like]: search_like };
+    }
+
+    // If there exists "req.load.user", then only the quizzes of that user are shown
+    if (req.load && req.load.user) {
+        countOptions.where.authorId = req.load.user.id;
+        findOptions.where.authorId = req.load.user.id;
+
+        if (req.loginUser && req.loginUser.id == req.load.user.id) {
+            title = "My Quizzes";
+        } else {
+            title = "Quizzes of " + req.load.user.username;
+        }
     }
 
     try {
@@ -76,7 +94,8 @@ exports.index = async (req, res, next) => {
         const quizzes = await models.Quiz.findAll(findOptions);
         res.render('quizzes/index.ejs', {
             quizzes,
-            search
+            search,
+            title
         });
     } catch (error) {
         next(error);
