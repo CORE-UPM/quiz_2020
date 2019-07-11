@@ -3,9 +3,11 @@
     <a href="/auth/github">Login with GitHub</a>
 </div>
 
-<div>
-    <a href="/users/new">Register local account</a>
-</div>
+<% if (!!process.env.QUIZ_OPEN_REGISTER) { %>
+    <div>
+        <a href="/users/new">Register local account</a>
+    </div>
+<% } %>
 
 <h1>Login</h1>
 
