@@ -20,7 +20,9 @@
 
         <div class="right">
             <% if (!locals.loginUser) { %>
-                <a href="/users/new">Register</a>
+                <% if (!!process.env.QUIZ_OPEN_REGISTER) { %>
+                    <a href="/users/new">Register</a>
+                <% } %>
                 <a href="/login">Login</a>
             <% } else { %>
                 <a href="/users/<%= loginUser.id %>"><%= loginUser.username %></a>
