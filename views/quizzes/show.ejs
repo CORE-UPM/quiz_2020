@@ -12,4 +12,16 @@
     <li>Answer: <b><%= quiz.answer %></b></li>
 </ul>
 
+
+<h1>
+    Tips:
+</h1>
+
+<% include ../tips/_index %>
+
+<% if (locals.loginUser) { %>
+    <% include ../tips/_new %>
+<% } %>
+
+
 <a href="/goback" class="button">Go back</a>

@@ -15,6 +15,9 @@ const sequelize = new Sequelize(url);
 // Import the definition of the Quiz Table from quiz.js
 sequelize.import(path.join(__dirname, 'quiz'));
 
+// Import the definition of the Tips Table from tip.js
+sequelize.import(path.join(__dirname,'tip'));
+
 // Import the definition of the Users Table from user.js
 sequelize.import(path.join(__dirname,'user'));
 
@@ -24,11 +27,14 @@ sequelize.import(path.join(__dirname,'session'));
 
 // Relation between models
 
-const {quiz, user} = sequelize.models;
+const {quiz, tip, user} = sequelize.models;
 
 // Relation 1-to-N between User and Quiz:
 user.hasMany(quiz, {foreignKey: 'authorId'});
 quiz.belongsTo(user, {as: 'author', foreignKey: 'authorId'});
 
+// Relation 1-to-N between Tip and Quiz:
+tip.belongsTo(quiz);
+quiz.hasMany(tip);
 
 module.exports = sequelize;

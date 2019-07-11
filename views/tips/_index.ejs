@@ -1,0 +1,18 @@
+
+<% var tips = quiz.tips; %>
+
+<ul>
+
+    <% if (tips.length === 0 ) { %>
+
+        <li>No tips yet.</li>
+
+    <% } else { %>
+
+        <% for (var i in tips) { %>
+            <li> <%= tips[i].text %> </li>
+        <% } %>
+
+    <% } %>
+
+</ul>

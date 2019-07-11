@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 const quizController = require('../controllers/quiz');
+const tipController = require('../controllers/tip');
 const userController = require('../controllers/user');
 const sessionController = require('../controllers/session');
 
@@ -141,6 +142,10 @@ router.delete('/quizzes/:quizId(\\d+)',
 
 router.get('/quizzes/:quizId(\\d+)/play',  quizController.play);
 router.get('/quizzes/:quizId(\\d+)/check', quizController.check);
+
+router.post('/quizzes/:quizId(\\d+)/tips',
+    sessionController.loginRequired,
+    tipController.create);
 
 
 module.exports = router;
