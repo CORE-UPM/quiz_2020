@@ -11,6 +11,19 @@
 </div>
 
 <br/>
+
+<label for="img">Attach file (Max size 2MB):</label>
+<input type="file" id="img" name="image"/>
+
+<br />
+
+<% if (quiz.id) { %>
+    <label for="img">Keep the current attached file:</label>
+    <input type="checkbox" name="keepAttachment" value="1" checked>
+<% } %>
+
+<br />
+
 <a href="/goback" class="button">Cancel</a>
 
 <input type="submit" value="Save">
