@@ -33,5 +33,9 @@
 
     <hr />
 
-    <a href="/users/new">Register local account</a>
+    <% if (!!process.env.QUIZ_OPEN_REGISTER) { %>
+        <div>
+            <a href="/users/new">Register local account</a>
+        </div>
+    <% } %>
 </section>
