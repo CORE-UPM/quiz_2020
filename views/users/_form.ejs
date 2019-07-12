@@ -30,6 +30,16 @@
         <% } %>
     </li>
 
+    <% if ( user.id) { %>
+        <% if (locals.loginUser.isAdmin || locals.loginUser.id === user.id) { %>
+            <li>
+                Token:
+                <b><%= user.token || 'NO TOKEN' %></b>
+                <a href="/users/<%= user.id %>/token?_method=PUT" class="button">Generate new token</a>
+            </li>
+        <% } %>
+    <% } %>
+
     <li>
         <div>
             Photo:

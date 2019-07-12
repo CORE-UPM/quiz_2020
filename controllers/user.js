@@ -1,3 +1,5 @@
+"use strict";
+
 const Sequelize = require("sequelize");
 const {models} = require("../models");
 
@@ -6,6 +8,7 @@ const fs = require('fs');
 const attHelper = require("../helpers/attachments");
 
 const paginate = require('../helpers/paginate').paginate;
+const authentication = require('../helpers/authentication');
 
 
 // Options for the files uploaded to Cloudinary
@@ -108,8 +111,11 @@ exports.create = (req, res, next) => {
         password
     });
 
+    // Create the token field:
+    user.token = authentication.createToken();
+
     // Save into the data base
-    user.save({fields: ["username", "password", "salt"]})
+    user.save({fields: ["username", "token", "password", "salt"]})
     .then(user => { // Render the users page
         req.flash('success', 'User created successfully.');
 
@@ -342,3 +348,23 @@ exports.destroy = (req, res, next) => {
         next(error)
     });
 };
+
+
+//-----------------------------------------------------------
+
+
+// PUT /users/:id/token
+// Create a saves a new user access token.
+exports.createToken = function (req, res, next) {
+
+    req.user.token = authentication.createToken();
+
+    req.user.save({fields: ["token"]})
+    .then(function (user) {
+        req.flash('success', 'User Access Token created successfully.');
+        res.redirect('/users/' + user.id);
+    })
+    .catch(error => next(error));
+};
+
+//-----------------------------------------------------------
