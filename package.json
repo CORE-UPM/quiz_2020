@@ -17,6 +17,7 @@
     "connect-session-sequelize": "^6.1.1",
     "cookie-parser": "~1.4.4",
     "cookieconsent": "^3.1.1",
+    "cors": "^2.8.5",
     "debug": "~2.6.9",
     "dotenv": "^8.2.0",
     "ejs": "~2.6.1",

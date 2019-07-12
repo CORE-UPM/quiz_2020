@@ -1,3 +1,5 @@
+"use strict";
+
 const {Model} = require('sequelize');
 const crypt = require('../helpers/crypt');
 
@@ -42,6 +44,10 @@ module.exports = function (sequelize, DataTypes) {
                 type: DataTypes.STRING,
                 unique: true,
                 validate: {notEmpty: {msg: "Username must not be empty."}}
+            },
+            token: {
+                type: DataTypes.STRING,
+                validate: {notEmpty: {msg: "Token must not be empty."}}
             },
             password: {
                 type: DataTypes.STRING,
