@@ -1,8 +1,11 @@
+"use strict";
+
 const Sequelize = require("sequelize");
 const {models} = require("../models");
 const attHelper = require("../helpers/attachments");
 
 const paginate = require('../helpers/paginate').paginate;
+const authentication = require('../helpers/authentication');
 
 
 // Autoload the user with id equals to :userId
@@ -91,8 +94,11 @@ exports.create = async (req, res, next) => {
     let user = models.user.build({username, password});
 
     try {
-        // Save into the data base
-        user = await user.save({fields: ["username", "password", "salt"]});
+        // Create the token field:
+    user.token = authentication.createToken();
+
+    // Save into the data base
+        user = await user.save({fields: ["username", "token", "password", "salt"]});
         req.flash('success', 'User created successfully.');
 
         try {
@@ -261,3 +267,24 @@ exports.destroy = async (req, res, next) => {
         next(error)
     }
 };
+
+
+//-----------------------------------------------------------
+
+
+// PUT /users/:id/token
+// Create a saves a new user access token.
+exports.createToken = async (req, res, next) => {
+
+    req.user.token = authentication.createToken();
+
+    try {
+        const user = await req.user.save({fields: ["token"]});
+        req.flash('success', 'User Access Token created successfully.');
+        res.redirect('/users/' + user.id);
+    } catch (error) {
+        next(error);
+    }
+};
+
+//-----------------------------------------------------------

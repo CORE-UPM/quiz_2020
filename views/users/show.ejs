@@ -24,6 +24,12 @@
         <b><%= user.isAdmin ? "Yes" : "No" %></b>
     </li>
 
+    <% if (locals.loginUser.isAdmin || locals.loginUser.id === user.id) { %>
+        <li>
+            Token:
+            <b><%= user.token || 'NO TOKEN' %></b>
+        </li>
+    <% } %>
 </ul>
 
 <% if (locals.loginUser && (locals.loginUser.isAdmin || locals.loginUser.id === user.id)) { %>
