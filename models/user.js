@@ -1,3 +1,4 @@
+"use strict";
 
 const {Model} = require('sequelize');
 const crypt = require('../helpers/crypt');
@@ -26,24 +27,28 @@ module.exports = function (sequelize, DataTypes) {
     }
 
     User.init({
-        username: {
-            type: DataTypes.STRING,
-            unique: true,
-            validate: {notEmpty: {msg: "Username must not be empty."}}
-        },
-        password: {
-            type: DataTypes.STRING,
-            validate: {notEmpty: {msg: "Password must not be empty."}},
-            set(password) {
-                // Random String used as salt.
-                this.salt = Math.round((new Date().valueOf() * Math.random())) + '';
-                this.setDataValue('password', crypt.encryptPassword(password, this.salt));
-            }
-        },
-        salt: {
-            type: DataTypes.STRING
-        },
-        githubId: {
+            username: {
+                type: DataTypes.STRING,
+                unique: true,
+                validate: {notEmpty: {msg: "Username must not be empty."}}
+            },
+            token: {
+                type: DataTypes.STRING,
+                validate: {notEmpty: {msg: "Token must not be empty."}}
+            },
+            password: {
+                type: DataTypes.STRING,
+                validate: {notEmpty: {msg: "Password must not be empty."}},
+                set(password) {
+                    // Random String used as salt.
+                    this.salt = Math.round((new Date().valueOf() * Math.random())) + '';
+                    this.setDataValue('password', crypt.encryptPassword(password, this.salt));
+                }
+            },
+            salt: {
+                type: DataTypes.STRING
+            },
+            githubId: {
             type: DataTypes.INTEGER,
             unique: true
         },
@@ -51,11 +56,10 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.STRING,
             unique: true,
             validate: {notEmpty: {msg: "Username must not be empty."}}
-        },
-        isAdmin: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: false
-        }
+        },isAdmin: {
+                type: DataTypes.BOOLEAN,
+                defaultValue: false
+            }
         }, {
             sequelize
         }

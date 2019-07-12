@@ -42,28 +42,28 @@ router.delete('/login', sessionController.destroy);
 
 // Redirection to the saved restoration route.
 function redirectBack(req, res, next) {
-  const url = req.session.backURL || "/";
-  delete req.session.backURL;
-  res.redirect(url);
+    const url = req.session.backURL || "/";
+    delete req.session.backURL;
+    res.redirect(url);
 }
 
 router.get('/goback', redirectBack);
 
 // Save the route that will be the current restoration route.
 function saveBack(req, res, next) {
-  req.session.backURL = req.url;
-  next();
+    req.session.backURL = req.url;
+    next();
 }
 
 // Restoration routes are GET routes that do not end in:
 //   /new, /edit, /play, /check, /login or /:id.
 router.get(
     [
-      '/',
-      '/author',
-      '/users',
-      '/users/:id(\\d+)/quizzes',
-      '/quizzes'
+        '/',
+        '/author',
+        '/users',
+        '/users/:id(\\d+)/quizzes',
+        '/quizzes'
     ],
     saveBack);
 
@@ -71,12 +71,12 @@ router.get(
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index');
+    res.render('index');
 });
 
 // Author page.
 router.get('/author', (req, res, next) => {
-  res.render('author');
+    res.render('author');
 });
 
 
@@ -94,20 +94,20 @@ router.get('/users/:userId(\\d+)',
     userController.show);
 
 if (!!process.env.QUIZ_OPEN_REGISTER) {
-  router.get('/users/new',
-      userController.new);
-  router.post('/users',
-      upload.single('photo'),
+    router.get('/users/new',
+        userController.new);
+    router.post('/users',
+        upload.single('photo'),
       userController.create);
 } else {
-  router.get('/users/new',
-      sessionController.loginRequired,
-      sessionController.adminRequired,
-      userController.new);
-  router.post('/users',
-      sessionController.loginRequired,
-      sessionController.adminRequired,
-      upload.single('photo'),
+    router.get('/users/new',
+        sessionController.loginRequired,
+        sessionController.adminRequired,
+        userController.new);
+    router.post('/users',
+        sessionController.loginRequired,
+        sessionController.adminRequired,
+        upload.single('photo'),
       userController.create);
 }
 
@@ -126,6 +126,13 @@ router.delete('/users/:userId(\\d+)',
     sessionController.loginRequired,
     sessionController.adminOrMyselfRequired,
     userController.destroy);
+
+
+router.put('/users/:userId(\\d+)/token',
+    sessionController.loginRequired,
+    sessionController.adminOrMyselfRequired,
+    userController.createToken);   // generar un nuevo token
+
 
 router.get('/users/:userId(\\d+)/quizzes',
     sessionController.loginRequired,

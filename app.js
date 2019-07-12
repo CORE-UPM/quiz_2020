@@ -10,10 +10,12 @@ var partials = require('express-partials');
 var flash = require('express-flash');
 var methodOverride = require('method-override');
 var redirectToHTTPS = require('express-http-to-https').redirectToHTTPS
+var cors = require('cors');
 
 const passport = require('passport');
 
-var indexRouter = require('./routes/index');
+var apiRouter = require('./routes/api');
+var htmlRouter = require('./routes/index');
 
 var app = express();
 
@@ -57,6 +59,8 @@ app.use(passport.initialize( {
 }));
 app.use(passport.session());
 
+// Control de Acceso HTTP (CORS)
+app.use(cors());
 
 // Dynamic Helper:
 app.use(function(req, res, next) {
@@ -77,7 +81,13 @@ app.use(function(req, res, next) {
     next();
 });
 
-app.use('/', indexRouter);
+
+// Routes mounted at '/api'.
+app.use('/api', apiRouter);
+
+// Routes mounted at '/'. (no starting with /api/)
+app.use(/^(?!\/api\/)/, htmlRouter);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

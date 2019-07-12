@@ -1,7 +1,7 @@
 const urlm = require('url');
 
 
-function addPagenoToUrl(url, pageno, _param_name) {
+const addPagenoToUrl = (url, pageno, _param_name) => {
     const param_name = _param_name ? _param_name : "pageno";
     const urlObj = urlm.parse(url, true);
 
@@ -10,13 +10,13 @@ function addPagenoToUrl(url, pageno, _param_name) {
     delete urlObj.search;
 
     return urlm.format(urlObj);
-}
+};
 
 
 // Helper function used to paginate.
 // Return the HTML links used to paginate.
 //
-exports.paginate = (totalItems, itemsPerPage, currentPage, url, param_name) => {
+const paginate = (totalItems, itemsPerPage, currentPage, url, param_name) => {
 
     if (totalItems <= itemsPerPage) {
         return false;
@@ -83,3 +83,7 @@ exports.paginate = (totalItems, itemsPerPage, currentPage, url, param_name) => {
 
     return html.join('');
 };
+
+
+exports.addPagenoToUrl = addPagenoToUrl;
+exports.paginate = paginate;
