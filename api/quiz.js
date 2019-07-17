@@ -1,6 +1,8 @@
 const {models} = require('../models');
 const Sequelize = require('sequelize');
 
+const js2xmlparser = require("js2xmlparser");
+
 const addPagenoToUrl = require('../helpers/paginate').addPagenoToUrl;
 
 //-----------------------------------------------------------
@@ -179,11 +181,39 @@ exports.index = async (req, res, next) => {
             nextUrl = addPagenoToUrl(`${protocol}://${req.headers["host"]}${req.baseUrl}${req.url}`, nextPage)
         }
 
-        res.json({
-            quizzes,
-            pageno,
-            nextUrl
-        });
+        const format = (req.params.format || 'json').toLowerCase();
+
+        switch (format) {
+            case 'json':
+
+                res.json({
+                    quizzes,
+                    pageno,
+                    nextUrl
+                });
+                break;
+
+            case 'xml':
+
+                var options = {
+                    typeHandlers: {
+                        "[object Null]": function(value) {
+                            return js2xmlparser.Absent.instance;
+                        }
+                    }
+                };
+
+                res.set({
+                    'Content-Type': 'application/xml'
+                }).send(
+                    js2xmlparser.parse("quizzes", {quiz: quizzes}, options)
+                );
+                break;
+
+            default:
+                console.log('No supported format \".' + format + '\".');
+                res.sendStatus(406);
+        }
 
     } catch (error) {
         next(error);
@@ -201,13 +231,43 @@ exports.show = (req, res, next) => {
     //   if this quiz is one of my favourites, then I create
     //   the attribute "favourite = true"
 
-    res.json({
+    const format = (req.params.format || 'json').toLowerCase();
+
+    const data = {
         id: quiz.id,
         question: quiz.question,
-        author: quiz.author,
-        attachment: quiz.attachment,
+        author: quiz.author && quiz.author.get({plain:true}),
+        attachment: quiz.attachment && quiz.attachment.get({plain:true}),
         favourite: quiz.fans.some(fan => fan.id == token.userId)
-    });
+    };
+
+    switch (format) {
+        case 'json':
+
+            res.json(data);
+            break;
+
+        case 'xml':
+
+            var options = {
+                typeHandlers: {
+                    "[object Null]": function (value) {
+                        return js2xmlparser.Absent.instance;
+                    }
+                }
+            };
+
+            res.set({
+                'Content-Type': 'application/xml'
+            }).send(
+                js2xmlparser.parse("quiz", data, options)
+            );
+            break;
+
+        default:
+            console.log('No supported format \".' + format + '\".');
+            res.sendStatus(406);
+    }
 };
 
 //-----------------------------------------------------------
