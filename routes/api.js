@@ -46,10 +46,10 @@ router.get('/users/tokenOwner',
 
 // Routes for the quizzes resource.
 
-router.get('/quizzes',
+router.get('/quizzes.:format?',
     quizApi.index);
 
-router.get('/quizzes/:quizId(\\d+)',
+router.get('/quizzes/:quizId(\\d+).:format?',
     quizApi.show);
 
 router.get('/users/:userId(\\d+)/quizzes',
