@@ -139,6 +139,7 @@ router.get('/quizzes/:quizId(\\d+)',
     quizController.show);
 router.get('/quizzes/new',
     sessionController.loginRequired,
+    quizController.limitPerDay,
     quizController.new);
 router.post('/quizzes',
     sessionController.loginRequired,

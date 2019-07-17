@@ -2,6 +2,8 @@ const Sequelize = require("sequelize");
 const {models} = require("../models");
 const attHelper = require("../helpers/attachments");
 
+const moment = require('moment');
+
 const paginate = require('../helpers/paginate').paginate;
 
 
@@ -207,6 +209,18 @@ exports.update = async (req, res, next) => {
 
         try {
             if (req.body.keepPhoto) return; // Don't change the photo.
+
+            // The photo can be changed if more than 1 minute has passed since the last change:
+            if (user.photo) {
+
+                const now = moment();
+                const lastEdition = moment(user.photo.updatedAt);
+
+                if (lastEdition.add(1,"m").isAfter(now)) {
+                    req.flash('error', 'Photo file can not be modified until 1 minute has passed.');
+                    return
+                }
+            }
 
             // Delete old photo.
             if (user.photo) {
