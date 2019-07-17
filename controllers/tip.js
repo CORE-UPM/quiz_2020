@@ -18,6 +18,29 @@ exports.load = (req, res, next, tipId) => {
 };
 
 
+// MW - No se pueden crear mas de 50 tips por quiz
+exports.limitPerQuiz = (req, res, next) => {
+
+    const LIMIT_PER_QUIZ = 50;
+
+    let countOptions = {
+        where: {
+            quizId: req.quiz.id
+        }
+    };
+
+    models.tip.count(countOptions)
+    .then(count => {
+        if (count < LIMIT_PER_QUIZ) {
+            next();
+        } else {
+            req.flash('error', `Maximun ${LIMIT_PER_QUIZ} tips (accepted and non accepted) per quiz.`);
+            res.redirect('back');
+        }
+    });
+};
+
+
 // POST /quizzes/:quizId/tips
 exports.create = (req, res, next) => {
 

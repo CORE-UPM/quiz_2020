@@ -5,6 +5,8 @@ const cloudinary = require('cloudinary');
 const fs = require('fs');
 const attHelper = require("../helpers/attachments");
 
+const moment = require('moment');
+
 const paginate = require('../helpers/paginate').paginate;
 
 
@@ -49,6 +51,34 @@ exports.load = (req, res, next, quizId) => {
         }
     })
     .catch(error => next(error));
+};
+
+
+// MW - Un usuario no puede crear mas de 50 quizzes al dia.
+exports.limitPerDay = (req, res, next) => {
+
+    const LIMIT_PER_DAY = 50;
+
+    const yesterday = moment().subtract(1, 'days')
+
+    // console.log("ayer = ", yesterday.calendar());
+
+    let countOptions = {
+        where: {
+            authorId: req.loginUser.id,
+            createdAt: {$gte: yesterday}
+        }
+    };
+
+    models.quiz.count(countOptions)
+    .then(count => {
+        if (count < LIMIT_PER_DAY) {
+            next();
+        } else {
+            req.flash('error', `Maximun ${LIMIT_PER_DAY} new quizzes per day.`);
+            res.redirect('/goback');
+        }
+    });
 };
 
 
@@ -328,6 +358,18 @@ exports.update = (req, res, next) => {
         req.flash('success', 'Quiz edited successfully.');
 
         if (req.body.keepAttachment) return; // Don't change the attachment.
+
+        // The attachment can be changed if more than 1 minute has passed since the last change:
+        if (quiz.attachment) {
+
+            const now = moment();
+            const lastEdition = moment(quiz.attachment.updatedAt);
+
+            if (lastEdition.add(1,"m").isAfter(now)) {
+                req.flash('error', 'Attached file can not be modified until 1 minute has passed.');
+                return
+            }
+        }
 
         // There is no attachment: Delete old attachment.
         if (!req.file) {

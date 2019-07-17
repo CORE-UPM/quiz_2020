@@ -140,6 +140,7 @@ router.get('/quizzes/:quizId(\\d+)',
     quizController.show);
 router.get('/quizzes/new',
     sessionController.loginRequired,
+    quizController.limitPerDay,
     quizController.new);
 router.post('/quizzes',
     sessionController.loginRequired,
@@ -164,6 +165,7 @@ router.get('/quizzes/:quizId(\\d+)/check', quizController.check);
 
 router.post('/quizzes/:quizId(\\d+)/tips',
     sessionController.loginRequired,
+    tipController.limitPerQuiz,
     tipController.create);
 router.put('/quizzes/:quizId(\\d+)/tips/:tipId(\\d+)/accept',
     sessionController.loginRequired,
