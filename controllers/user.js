@@ -86,7 +86,7 @@ exports.create = (req, res, next) => {
     user.save({fields: ["username", "password", "salt"]})
     .then(user => { // Render the users page
         req.flash('success', 'User created successfully.');
-        if (req.session.loginUser) {
+        if (req.loginUser) {
             res.redirect('/users/' + user.id);
         } else {
             res.redirect('/login'); // Redirection to the login page
@@ -152,9 +152,10 @@ exports.destroy = (req, res, next) => {
     .then(() => {
 
         // Deleting logged user.
-        if (req.session.loginUser && req.session.loginUser.id === req.user.id) {
+        if (req.loginUser && req.loginUser.id === req.user.id) {
             // Close the user session
-            delete req.session.loginUser;
+            req.logout()
+            delete req.session.loginExpires;
         }
 
         req.flash('success', 'User deleted successfully.');
