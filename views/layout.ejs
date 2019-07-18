@@ -19,11 +19,11 @@
     <header class="main" id="mainHeader">
 
         <div class="right">
-            <% if (!session.loginUser) { %>
+            <% if (!locals.loginUser) { %>
                 <a href="/users/new">Register</a>
                 <a href="/login">Login</a>
             <% } else { %>
-                <a href="/users/<%= session.loginUser.id %>"><%= session.loginUser.username %></a>
+                <a href="/users/<%= loginUser.id %>"><%= loginUser.username %></a>
                 <a href="/login?_method=DELETE">Logout</a>
             <% } %>
         </div>
