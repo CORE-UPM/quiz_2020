@@ -86,7 +86,7 @@ exports.create = async (req, res, next) => {
         // Save into the data base
         user = await user.save({fields: ["username", "password", "salt"]});
         req.flash('success', 'User created successfully.');
-        if (req.session.loginUser) {
+        if (req.loginUser) {
             res.redirect('/users/' + user.id);
         } else {
             res.redirect('/login'); // Redirection to the login page
@@ -154,9 +154,10 @@ exports.destroy = async (req, res, next) => {
 
     try {
         // Deleting logged user.
-        if (req.session.loginUser && req.session.loginUser.id === req.load.user.id) {
+        if (req.loginUser && req.loginUser.id === req.load.user.id) {
             // Close the user session
-            delete req.session.loginUser;
+            req.logout()
+            delete req.session.loginExpires;
         }
 
         await req.load.user.destroy();

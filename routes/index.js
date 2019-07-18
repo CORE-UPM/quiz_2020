@@ -16,7 +16,9 @@ router.all('*',sessionController.checkLoginExpires);
 router.get('/login', sessionController.new);
 
 // create login session
-router.post('/login', sessionController.create);
+router.post('/login',
+    sessionController.create,
+    sessionController.createLoginExpires);
 
 // logout - close login session
 router.delete('/login', sessionController.destroy);
