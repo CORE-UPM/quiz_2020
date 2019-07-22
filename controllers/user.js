@@ -1,12 +1,28 @@
 const Sequelize = require("sequelize");
 const {models} = require("../models");
 
+const cloudinary = require('cloudinary');
+const fs = require('fs');
+const attHelper = require("../helpers/attachments");
+
 const paginate = require('../helpers/paginate').paginate;
+
+
+// Options for the files uploaded to Cloudinary
+const cloudinary_upload_options = {
+    async: false,
+    folder: "/core/quiz2020/photos",
+    resource_type: "auto",
+    tags: ['core', 'quiz2020']
+};
+
 
 // Autoload the user with id equals to :userId
 exports.load = (req, res, next, userId) => {
 
-    models.user.findByPk(userId)
+    models.user.findByPk(userId, {
+        include: [ {model: models.attachment, as: "photo"} ]
+    })
     .then(user => {
         if (user) {
             req.user = user;
@@ -40,13 +56,17 @@ exports.index = (req, res, next) => {
         const findOptions = {
             offset: items_per_page * (pageno - 1),
             limit: items_per_page,
-            order: ['username']
+            order: ['username'],
+            include: [ {model: models.attachment, as: "photo"} ]
         };
 
         return models.user.findAll(findOptions);
     })
     .then(users => {
-        res.render('users/index', {users});
+        res.render('users/index', {
+            users,
+            cloudinary
+        });
     })
     .catch(error => next(error));
 };
@@ -56,7 +76,10 @@ exports.show = (req, res, next) => {
 
     const {user} = req;
 
-    res.render('users/show', {user});
+    res.render('users/show', {
+        user,
+        cloudinary
+    });
 };
 
 
@@ -86,11 +109,53 @@ exports.create = (req, res, next) => {
     user.save({fields: ["username", "password", "salt"]})
     .then(user => { // Render the users page
         req.flash('success', 'User created successfully.');
-        if (req.loginUser) {
-            res.redirect('/users/' + user.id);
-        } else {
-            res.redirect('/login'); // Redirection to the login page
+
+        if (!req.file) {
+            req.flash('info', 'User without photo.');
+            if (req.loginUser) {
+                res.redirect('/users/' + user.id);
+            } else {
+                res.redirect('/login'); // Redirection to the login page
+            }
+            return;
         }
+
+        // Save the photo into  Cloudinary
+        return attHelper.checksCloudinaryEnv()
+        .then(() => {
+            return attHelper.uploadResourceToCloudinary(req.file.path, cloudinary_upload_options);
+        })
+        .then(uploadResult => {
+
+            // Create the new photo into the data base.
+            return models.attachment.create({
+                public_id: uploadResult.public_id,
+                url: uploadResult.url,
+                filename: req.file.originalname,
+                mime: req.file.mimetype
+            })
+            .then(attachment => {
+                return user.setPhoto(attachment);
+            })
+            .then(() => {
+                req.flash('success', 'Photo saved successfully.');
+            })
+            .catch(error => { // Ignoring validation errors
+                req.flash('error', 'Failed to save file: ' + error.message);
+                cloudinary.api.delete_resources(uploadResult.public_id);
+            });
+
+        })
+        .catch(error => {
+            req.flash('error', 'Failed to save photo: ' + error.message);
+        })
+        .then(() => {
+            if (req.loginUser) {
+                res.redirect('/users/' + user.id);
+            } else {
+                res.redirect('/login'); // Redirection to the login page
+            }
+        });
     })
     .catch(Sequelize.UniqueConstraintError, error => {
         req.flash('error', `User "${username}" already exists.`);
@@ -101,7 +166,20 @@ exports.create = (req, res, next) => {
         error.errors.forEach(({message}) => req.flash('error', message));
         res.render('users/new', {user});
     })
-    .catch(error => next(error));
+    .catch(error => {
+        req.flash('error', 'Error creating a new User: ' + error.message);
+        next(error);
+    })
+    .finally(() => {
+        // delete the file uploaded to ./uploads by multer.
+        if (req.file) {
+            fs.unlink(req.file.path, err => {
+                if (err) {
+                    console.log(`Error deleting file: ${req.file.path} >> ${err}`);
+                }
+            });
+        }
+    });
 };
 
 
@@ -134,20 +212,94 @@ exports.update = (req, res, next) => {
     user.save({fields: fields_to_update})
     .then(user => {
         req.flash('success', 'User updated successfully.');
-        res.redirect('/users/' + user.id);
+
+        if (req.body.keepPhoto) return; // Don't change the photo.
+
+        // There is no photo: Delete old photo.
+        if (!req.file) {
+            req.flash('info', 'This user has no photo.');
+            if (user.photo) {
+                cloudinary.api.delete_resources(user.photo.public_id);
+                user.photo.destroy();
+            }
+            return;
+        }
+
+        // Save the new attachment into Cloudinary:
+        return attHelper.checksCloudinaryEnv()
+        .then(() => {
+            return attHelper.uploadResourceToCloudinary(req.file.path, cloudinary_upload_options);
+        })
+        .then(function (uploadResult) {
+
+            // Remenber the public_id of the old photo.
+            const old_public_id = user.photo ? user.photo.public_id : null;
+
+            // Update the attachment into the data base.
+            return user.getPhoto()
+            .then(attachment => {
+                if (!attachment) {
+                    attachment = models.attachment.build();
+                }
+                attachment.public_id = uploadResult.public_id;
+                attachment.url = uploadResult.url;
+                attachment.filename = req.file.originalname;
+                attachment.mime = req.file.mimetype;
+                return attachment.save();
+            })
+            .then(attachment => {
+                if (old_public_id) {
+                    cloudinary.api.delete_resources(old_public_id);
+                }
+                return user.setPhoto(attachment)
+            })
+            .then(attachment => {
+                req.flash('success', 'Photo updated successfully.');
+            })
+            .catch(error => { // Ignoring image validation errors
+                req.flash('error', 'Failed updated new photo: ' + error.message);
+                cloudinary.api.delete_resources(uploadResult.public_id);
+            });
+        })
+        .catch(function (error) {
+            req.flash('error', 'Failed saving the new photo: ' + error.message);
+        });
+    })
+    .then(function () {
+        res.redirect('/users/' + req.user.id);
     })
     .catch(Sequelize.ValidationError, error => {
         req.flash('error', 'There are errors in the form:');
         error.errors.forEach(({message}) => req.flash('error', message));
         res.render('users/edit', {user});
     })
-    .catch(error => next(error));
+    .catch(error => {
+        req.flash('error', 'Error editing the User: ' + error.message);
+        next(error)
+    })
+    .finally(() => {
+        // delete the file uploaded to ./uploads by multer.
+        if (req.file) {
+            fs.unlink(req.file.path, err => {
+                if (err) {
+                    console.log(`Error deleting file: ${req.file.path} >> ${err}`);
+                }
+            });
+        }
+    });
 };
 
 
 // DELETE /users/:userId
 exports.destroy = (req, res, next) => {
 
+    // Delete the photo at Cloudinary (result is ignored)
+    if (req.user.photo) {
+        attHelper.checksCloudinaryEnv()
+        .then(() => {
+            cloudinary.api.delete_resources(req.user.photo.public_id);
+        });
+    }
     req.user.destroy()
     .then(() => {
 
@@ -161,5 +313,8 @@ exports.destroy = (req, res, next) => {
         req.flash('success', 'User deleted successfully.');
         res.redirect('/goback');
     })
-    .catch(error => next(error));
+    .catch(error => {
+        req.flash('error', 'Error deleting the User: ' + error.message);
+        next(error)
+    });
 };

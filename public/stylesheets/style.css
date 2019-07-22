@@ -130,6 +130,44 @@ a.button:hover {
 
 /* ------------------------- */
 
+#usersIndex {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#usersIndex tr {
+  background-color: #e5e5e5;
+
+  border: 1px dotted #636363;
+  border-radius: 5px;
+}
+
+#usersIndex tr:nth-child(even) {
+  background-color: #cfcfcf
+}
+
+#usersIndex td {
+  padding: 3px;
+  margin: 2px;
+}
+
+#usersIndex tr td:nth-child(1) {
+  text-align: center;
+  width: 100px;
+}
+
+#usersIndex tr td:nth-child(2) {
+  vertical-align: top;
+  text-align: left;
+}
+
+#usersIndex tr td:nth-child(3) {
+  vertical-align: bottom;
+  text-align: right;
+}
+
+/* ------------------------- */
+
 .quizItem {
   display: flex;
   flex-flow: row wrap;
