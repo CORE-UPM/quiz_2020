@@ -13,7 +13,14 @@ exports.load = async (req, res, next, quizId) => {
         const quiz = await models.Quiz.findByPk(quizId, {
             include: [
                 {model: models.Attachment, as: 'attachment'},
-                {model: models.User, as: 'author'}
+                {
+                    model: models.User,
+                    as: 'author',
+                    include: [{
+                        model: models.Attachment,
+                        as: "photo"
+                    }]
+                }
             ]
         });
         if (quiz) {
@@ -94,7 +101,14 @@ exports.index = async (req, res, next) => {
         findOptions.limit = items_per_page;
         findOptions.include = [
                 {model: models.Attachment, as: 'attachment'},
-                {model: models.User, as: 'author'}
+                {
+                    model: models.User,
+                    as: 'author',
+                    include: [{
+                        model: models.Attachment,
+                        as: "photo"
+                    }]
+                }
             ];
 
         const quizzes = await models.Quiz.findAll(findOptions);
