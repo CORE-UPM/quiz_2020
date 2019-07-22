@@ -1,13 +1,17 @@
 const Sequelize = require("sequelize");
 const {models} = require("../models");
+const attHelper = require("../helpers/attachments");
 
 const paginate = require('../helpers/paginate').paginate;
+
 
 // Autoload the user with id equals to :userId
 exports.load = async (req, res, next, userId) => {
 
     try {
-        const user = await models.user.findByPk(userId);
+        const user = await models.user.findByPk(userId, {
+            include: [{model: models.attachment, as: "photo"}]
+        });
         if (user) {
             req.user = user;
             next();
@@ -41,11 +45,15 @@ exports.index = async (req, res, next) => {
         const findOptions = {
             offset: items_per_page * (pageno - 1),
             limit: items_per_page,
-            order: ['username']
+            order: ['username'],
+            include: [{model: models.attachment, as: "photo"}]
         };
 
         const users = await models.user.findAll(findOptions);
-        res.render('users/index', {users});
+        res.render('users/index', {
+            users,
+            attHelper
+        });
     } catch (error) {
         next(error);
     }
@@ -56,7 +64,10 @@ exports.show = (req, res, next) => {
 
     const {user} = req;
 
-    res.render('users/show', {user});
+    res.render('users/show', {
+        user,
+        attHelper
+    });
 };
 
 
@@ -77,19 +88,35 @@ exports.create = async (req, res, next) => {
 
     const {username, password} = req.body;
 
-    let user = models.user.build({
-        username,
-        password
-    });
+    let user = models.user.build({username, password});
 
     try {
         // Save into the data base
         user = await user.save({fields: ["username", "password", "salt"]});
         req.flash('success', 'User created successfully.');
-        if (req.loginUser) {
-            res.redirect('/users/' + user.id);
-        } else {
-            res.redirect('/login'); // Redirection to the login page
+
+        try {
+            if (!req.file) {
+                req.flash('info', 'User without photo.');
+                return;
+            }
+
+            // Checks that the CLOUDINAY_URL environmnet variable exists.
+            if (!attHelper.checksCloudinaryEnv()) {
+                return;
+            }
+
+            // Create the user photo
+            await createUserPhoto(req, user);
+
+        } catch (error) {
+            req.flash('error', 'Failed to save photo: ' + error.message);
+        } finally {
+            if (req.loginUser) {
+                res.redirect('/users/' + user.id);
+            } else {
+                res.redirect('/login'); // Redirection to the login page
+            }
         }
     } catch (error) {
         if (error instanceof Sequelize.UniqueConstraintError) {
@@ -100,8 +127,40 @@ exports.create = async (req, res, next) => {
             error.errors.forEach(({message}) => req.flash('error', message));
             res.render('users/new', {user});
         } else {
+            req.flash('error', 'Error creating a new User: ' + error.message);
             next(error);
         }
+    } finally {
+        // delete the file uploaded to ./uploads by multer.
+        if (req.file) {
+            attHelper.deleteLocalFile(req.file.path);
+        }
+    }
+};
+
+// Aux function to upload req.file to cloudinary, create an attachment with it, and
+// associate it with the given user.
+// This function is called from the create an update middlewares. DRY.
+const createUserPhoto = async (req, user) => {
+
+    // Save the attachment into Cloudinary
+    const uploadResult = await attHelper.uploadResourceToCloudinary(req);
+
+    let attachment;
+    try {
+        // Create the new attachment into the data base.
+        attachment = await models.attachment.create({
+            public_id: uploadResult.public_id,
+            url: uploadResult.url,
+            filename: req.file.originalname,
+            mime: req.file.mimetype
+        });
+        await user.setPhoto(attachment);
+        req.flash('success', 'Photo saved successfully.');
+    } catch (error) { // Ignoring validation errors
+        req.flash('error', 'Failed linking photo: ' + error.message);
+        attHelper.deleteResource(uploadResult.public_id);
+        attachment && attachment.destroy();
     }
 };
 
@@ -135,14 +194,48 @@ exports.update = async (req, res, next) => {
     try {
         await user.save({fields: fields_to_update});
         req.flash('success', 'User updated successfully.');
-        res.redirect('/users/' + user.id);
+
+        try {
+            if (req.body.keepPhoto) return; // Don't change the photo.
+
+            // Checks that the CLOUDINAY_URL environmnet variable exists.
+            if (!attHelper.checksCloudinaryEnv()) {
+                return;
+            }
+
+            // Delete old photo.
+            if (user.photo) {
+                attHelper.deleteResource(user.photo.public_id);
+                await user.photo.destroy();
+                await user.setPhoto();
+            }
+
+            if (!req.file) {
+                req.flash('info', 'This user has no photo.');
+                return;
+            }
+
+            // Create the user photo
+            await createUserPhoto(req, user);
+
+        } catch (error) {
+            req.flash('error', 'Failed saving the new photo: ' + error.message);
+        } finally {
+            res.redirect('/users/' + req.user.id);
+        }
     } catch (error) {
         if (error instanceof Sequelize.ValidationError) {
             req.flash('error', 'There are errors in the form:');
             error.errors.forEach(({message}) => req.flash('error', message));
             res.render('users/edit', {user});
         } else {
-            next(error);
+            req.flash('error', 'Error editing the User: ' + error.message);
+            next(error)
+        }
+    } finally {
+        // delete the file uploaded to ./uploads by multer.
+        if (req.file) {
+            attHelper.deleteLocalFile(req.file.path);
         }
     }
 };
@@ -151,8 +244,21 @@ exports.update = async (req, res, next) => {
 // DELETE /users/:userId
 exports.destroy = async (req, res, next) => {
 
+    const photo = req.user.photo;
+
+    // Delete the photo
+    if (photo) {
+        try {
+            // Checks that the CLOUDINAY_URL environmnet variable exists.
+            if (attHelper.checksCloudinaryEnv()) {
+                attHelper.deleteResource(photo.public_id);
+            }
+        } catch (error) {}
+    }
+
     try {
         await req.user.destroy();
+        photo && await photo.destroy();
 
         // Deleting logged user.
         if (req.loginUser && req.loginUser.id === req.user.id) {
@@ -164,6 +270,7 @@ exports.destroy = async (req, res, next) => {
         req.flash('success', 'User deleted successfully.');
         res.redirect('/goback');
     } catch (error) {
-        next(error);
+        req.flash('error', 'Error deleting the User: ' + error.message);
+        next(error)
     }
 };
