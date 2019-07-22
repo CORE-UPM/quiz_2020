@@ -177,8 +177,15 @@ passport.use(new GitHubStrategy({
                     isAdmin: false
                 }
             });
+            if (created) {
+                const url = profile.photos && profile.photos[0] && profile.photos[0].value;
+                if (url) {
+                    let photo = await models.Attachment.create({url});
+                    await user.setPhoto(photo);
+                }
+            }
             done(null, user);
-        } catch(error) {
+        } catch (error) {
             done(error, null);
         }
     }

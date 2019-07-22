@@ -31,6 +31,31 @@
     </li>
 
     <li>
+        <div>
+            Photo:
+            <br/>
+
+            <% if (user.id) { %>
+                <div>
+                    <label for="img">Keep the current photo:</label>
+                    <input type="checkbox" id="keepPhoto" name="keepPhoto" value="1" checked>
+                </div>
+            <% } %>
+
+            <div>
+                <label for="img">Attach file (Max size 2MB):</label>
+                <input type="file" id="photo" accept="image/*" name="photo">
+            </div>
+
+        <% if (user.photo) { %>
+                <img class="photo" src="<%= user.photo.url %>"/>
+            <% } else { %>
+                <img class="photo" src="/images/face.png"/>
+            <% } %>
+        </div>
+    </li>
+
+    <li>
         <% if (!user.id) { %>
             <span class="text-danger">Enter the new password twice</span>
         <% } else { %>

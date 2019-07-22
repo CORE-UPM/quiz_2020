@@ -21,11 +21,21 @@
 
             <td>
                 <a href="/quizzes/<%= quiz.id %>/play"><%= quiz.question %></a>
-                <br />
-                <small> (by <%= quiz.author ? quiz.author.displayName : "Anonymous" %>) </small>
             </td>
 
             <td>
+                <% if (quiz.author && quiz.author.photo) { %>
+                    <img class="miniphoto" src="<%= quiz.author.photo.url %>"/>
+                <% } else { %>
+                    <img class="miniphoto" src="/images/face.png"/>
+                <% } %>
+
+                <br/>
+
+                <small> <%= quiz.author ? quiz.author.displayName : "Anonymous" %> </small>
+
+                <br/>
+
                 <% if (locals.loginUser && (locals.loginUser.isAdmin || locals.loginUser.id === quiz.authorId)) { %>
                     <a href="/quizzes/<%= quiz.id %>" class="button">Show</a>
 
