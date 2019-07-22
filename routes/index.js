@@ -126,6 +126,7 @@ if (!!process.env.QUIZ_OPEN_REGISTER) {
   router.get('/users/new',
       userController.new);
   router.post('/users',
+      upload.single('photo'),
       userController.create);
 } else {
   router.get('/users/new',
@@ -135,6 +136,7 @@ if (!!process.env.QUIZ_OPEN_REGISTER) {
   router.post('/users',
       sessionController.loginRequired,
       sessionController.adminRequired,
+      upload.single('photo'),
       userController.create);
 }
 
@@ -147,6 +149,7 @@ router.put('/users/:userId(\\d+)',
     sessionController.loginRequired,
     userController.isLocalRequired,
     sessionController.adminOrMyselfRequired,
+    upload.single('photo'),
     userController.update);
 router.delete('/users/:userId(\\d+)',
     sessionController.loginRequired,

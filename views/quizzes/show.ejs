@@ -16,10 +16,18 @@
 
     <div>
         Question: <b><%= quiz.question %></b>
-        <br />
+        <br/>
         Answer: <b><%= quiz.answer %></b>
-        <br />
-        <small> by <%= quiz.author ? quiz.author.displayName : "Anonymous" %> </small>
+    </div>
+
+    <div>
+        <% if (quiz.author && quiz.author.photo) { %>
+            <img class="miniphoto" src="<%= quiz.author.photo.url %>"/>
+        <% } else { %>
+            <img class="miniphoto" src="/images/face.png"/>
+        <% } %>
+        <br/>
+        <small> <%= quiz.author ? quiz.author.displayName : "Anonymous" %> </small>
     </div>
 
 </div>

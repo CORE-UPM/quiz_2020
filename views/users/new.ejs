@@ -2,7 +2,7 @@
     Create User:
 </h1>
 
-<form method="post" action="/users">
+<form method="post" action="/users"  enctype="multipart/form-data" >
     <% include _form.ejs %>
 
     <input type="submit" value="Save" onclick="return forcePassword() && validPassword()">

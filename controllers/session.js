@@ -195,6 +195,21 @@ GitHubStrategy && passport.use(new GitHubStrategy({
                     profileName: profile.username
                 }
             });
+
+            // Update Photo
+            const newPhotoUrl = profile.photos && profile.photos[0] && profile.photos[0].value;
+            const oldPhoto = await user.getPhoto();
+            const oldPhotoUrl = oldPhoto && oldPhoto.url;
+            if (newPhotoUrl !== oldPhotoUrl) {
+                // Destroy old photo:
+                oldPhoto && await oldPhoto.destroy();
+
+                // Create and set new photo:
+                if (newPhotoUrl) {
+                    let photo = await models.Attachment.create({url: newPhotoUrl});
+                    await user.setPhoto(photo);
+                }
+            }
             done(null, user);
         } catch(error) {
             done(error, null);
@@ -226,8 +241,23 @@ TwitterStrategy && passport.use(new TwitterStrategy({
                     profileName: profile.username
                 }
             });
+
+            // Update Photo
+            const newPhotoUrl = profile.photos && profile.photos[0] && profile.photos[0].value;
+            const oldPhoto = await user.getPhoto();
+            const oldPhotoUrl = oldPhoto && oldPhoto.url;
+            if (newPhotoUrl !== oldPhotoUrl) {
+                // Destroy old photo:
+                oldPhoto && await oldPhoto.destroy();
+
+                // Create and set new photo:
+                if (newPhotoUrl) {
+                    let photo = await models.Attachment.create({url: newPhotoUrl});
+                    await user.setPhoto(photo);
+                }
+            }
             done(null, user);
-        } catch(error) {
+        } catch (error) {
             done(error, null);
         }
     }
@@ -257,6 +287,21 @@ GoogleStrategy && passport.use(new GoogleStrategy({
                     profileName: profile.displayName.replace(/ /g,"")
                 }
             });
+
+            // Update Photo
+            const newPhotoUrl = profile.photos && profile.photos[0] && profile.photos[0].value;
+            const oldPhoto = await user.getPhoto();
+            const oldPhotoUrl = oldPhoto && oldPhoto.url;
+            if (newPhotoUrl !== oldPhotoUrl) {
+                // Destroy old photo:
+                oldPhoto && await oldPhoto.destroy();
+
+                // Create and set new photo:
+                if (newPhotoUrl) {
+                    let photo = await models.Attachment.create({url: newPhotoUrl});
+                    await user.setPhoto(photo);
+                }
+            }
             done(null, user);
         } catch(error) {
             done(error, null);
@@ -290,6 +335,21 @@ LinkedinStrategy && passport.use(new LinkedinStrategy({
                     profileName: profile.displayName.replace(/ /g,"")
                 }
             });
+
+            // Update Photo
+            const newPhotoUrl = profile.photos && profile.photos[0] && profile.photos[0].value;
+            const oldPhoto = await user.getPhoto();
+            const oldPhotoUrl = oldPhoto && oldPhoto.url;
+            if (newPhotoUrl !== oldPhotoUrl) {
+                // Destroy old photo:
+                oldPhoto && await oldPhoto.destroy();
+
+                // Create and set new photo:
+                if (newPhotoUrl) {
+                    let photo = await models.Attachment.create({url: newPhotoUrl});
+                    await user.setPhoto(photo);
+                }
+            }
             done(null, user);
         } catch(error) {
             done(error, null);

@@ -3,6 +3,17 @@
 </h1>
 
 <ul>
+
+    <li>
+        Photo:
+        <br/>
+        <% if (user.photo) { %>
+            <img class="photo" src="<%= user.photo.url %>"/>
+        <% } else { %>
+            <img class="photo" src="/images/face.png"/>
+        <% } %>
+    </li>
+
     <li>
         User name:
         <b><%= user.displayName %></b>

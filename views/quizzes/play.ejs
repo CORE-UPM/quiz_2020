@@ -24,8 +24,16 @@
                 <input type="text" class="itemWide" name="answer" value="<%= answer %>" placeholder="Answer" autocomplete="off"/>
                 <input type="submit" class="itemNarrow" value="Check">
             </div>
+        </div>
 
-            <small> by <%= quiz.author ? quiz.author.displayName : "Anonymous" %> </small>
+        <div>
+            <% if (quiz.author && quiz.author.photo) { %>
+                <img class="miniphoto" src="<%= quiz.author.photo.url %>"/>
+            <% } else { %>
+                <img class="miniphoto" src="/images/face.png"/>
+            <% } %>
+            <br />
+            <small> <%= quiz.author ? quiz.author.displayName : "Anonymous" %> </small>
         </div>
     </div>
 
