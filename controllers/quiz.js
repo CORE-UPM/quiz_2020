@@ -153,7 +153,7 @@ exports.destroy = async (req, res, next) => {
     try {
         await req.load.quiz.destroy();
         req.flash('success', 'Quiz deleted successfully.');
-        res.redirect('/quizzes');
+        res.redirect('/goback');
     } catch (error) {
         req.flash('error', 'Error deleting the Quiz: ' + error.message);
         next(error);
