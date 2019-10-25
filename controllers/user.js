@@ -101,11 +101,6 @@ exports.create = async (req, res, next) => {
                 return;
             }
 
-            // Checks that the CLOUDINAY_URL environmnet variable exists.
-            if (!attHelper.checksCloudinaryEnv()) {
-                return;
-            }
-
             // Create the user photo
             await createUserPhoto(req, user);
 
@@ -144,7 +139,7 @@ exports.create = async (req, res, next) => {
 const createUserPhoto = async (req, user) => {
 
     // Save the attachment into Cloudinary
-    const uploadResult = await attHelper.uploadResourceToCloudinary(req);
+    const uploadResult = await attHelper.uploadResource(req);
 
     let attachment;
     try {
@@ -198,11 +193,6 @@ exports.update = async (req, res, next) => {
         try {
             if (req.body.keepPhoto) return; // Don't change the photo.
 
-            // Checks that the CLOUDINAY_URL environmnet variable exists.
-            if (!attHelper.checksCloudinaryEnv()) {
-                return;
-            }
-
             // Delete old photo.
             if (user.photo) {
                 attHelper.deleteResource(user.photo.public_id);
@@ -246,13 +236,10 @@ exports.destroy = async (req, res, next) => {
 
     const photo = req.user.photo;
 
-    // Delete the photo
+    // Delete the photo at Cloudinary or local file system (result is ignored)
     if (photo) {
         try {
-            // Checks that the CLOUDINAY_URL environmnet variable exists.
-            if (attHelper.checksCloudinaryEnv()) {
-                attHelper.deleteResource(photo.public_id);
-            }
+            attHelper.deleteResource(photo.public_id);
         } catch (error) {}
     }
 

@@ -164,11 +164,6 @@ exports.create = async (req, res, next) => {
                 return;
             }
 
-            // Checks that the CLOUDINAY_URL environmnet variable exists.
-            if (!attHelper.checksCloudinaryEnv()) {
-                return;
-            }
-
             // Create the quiz attachment
             await createQuizAttachment(req, quiz);
 
@@ -200,7 +195,7 @@ exports.create = async (req, res, next) => {
 const createQuizAttachment = async (req, quiz) => {
 
     // Save the attachment into Cloudinary
-    const uploadResult = await attHelper.uploadResourceToCloudinary(req);
+    const uploadResult = await attHelper.uploadResource(req);
 
     let attachment;
     try {
@@ -245,11 +240,6 @@ exports.update = async (req, res, next) => {
         try {
             if (req.body.keepAttachment) return; // Don't change the attachment.
 
-            // Checks that the CLOUDINAY_URL environmnet variable exists.
-            if (!attHelper.checksCloudinaryEnv()) {
-                return;
-            }
-
             // Delete old attachment.
             if (quiz.attachment) {
                 attHelper.deleteResource(quiz.attachment.public_id);
@@ -293,14 +283,11 @@ exports.destroy = async (req, res, next) => {
 
     const attachment = req.quiz.attachment;
 
-    // Delete the attachment
+    // Delete the attachment at Cloudinary or local file system (result is ignored)
     if (attachment) {
         try {
-            // Checks that the CLOUDINAY_URL environmnet variable exists.
-            if (attHelper.checksCloudinaryEnv()) {
-                attHelper.deleteResource(attachment.public_id);
-            }
-        } catch(error) {}
+            attHelper.deleteResource(attachment.public_id);
+        } catch (error) {}
     }
 
     try {
