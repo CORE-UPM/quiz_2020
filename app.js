@@ -9,6 +9,7 @@ var SequelizeStore = require('connect-session-sequelize')(session.Store);
 var partials = require('express-partials');
 var flash = require('express-flash');
 var methodOverride = require('method-override');
+var redirectToHTTPS = require('express-http-to-https').redirectToHTTPS
 
 var indexRouter = require('./routes/index');
 
@@ -18,6 +19,7 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+/*
 // In production:
 //   * At Heroku:
 //        I redirect the HTTP requests to https.
@@ -47,6 +49,11 @@ if (app.get('env') === 'production') {
         }
     });
 }
+*/
+
+// Don't redirect if the hostname is `localhost:port`
+app.use(redirectToHTTPS([/localhost:(\d{4})/], [], 301));
+
 
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(logger('dev'));

@@ -19,6 +19,7 @@
     "ejs": "^2.6.2",
     "express": "~4.16.1",
     "express-flash": "0.0.2",
+    "express-http-to-https": "^1.1.4",
     "express-partials": "^0.3.0",
     "express-session": "^1.16.2",
     "http-errors": "~1.6.3",
