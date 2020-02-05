@@ -20,6 +20,7 @@ const os = require('os');
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
+
 /**
  * Create HTTP server.
  */
@@ -31,32 +32,37 @@ var server = http.createServer(app);
  */
 
 server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+server.on('error', onError.bind(undefined, port));
+server.on('listening', onListening.bind(undefined, server));
 
 /**
  * ======================================================================
- * ONLY IN PRODUCTION WHEN THE WEB SERVER IS DEPLOYED AT quiz.dit.upm.es
+ * Creates HTTPS server if there exist certificate files.
  * ======================================================================
  */
-if (app.get('env') === 'production') {
-  if (os.hostname() === "quiz") {
-
-    /**
-     * Create HTTPS server.
-     */
-
-    var options = {
-      key: fs.readFileSync(path.join(__dirname, "../certificates/quiz.dit.upm.es.llave.pem")),
-      cert: fs.readFileSync(path.join(__dirname, "../certificates/quiz.dit.upm.es.certificado.pem")),
-      ca: fs.readFileSync(path.join(__dirname, "../certificates/cadDigiCertCA.pem"))
+try {
+    const options = {
+        key: fs.readFileSync(path.join(__dirname, "/etc/certificates/llave.pem")),
+        cert: fs.readFileSync(path.join(__dirname, "/etc/certificates/certificado.pem")),
+        ca: fs.readFileSync(path.join(__dirname, "/etc/certificates/cadDigiCertCA.pem"))
     };
 
-    var secureServer = https.createServer(options, app);
+    var sport = normalizePort(process.env.SPORT || '3443');
+    app.set('sport', sport);
 
-    secureServer.listen(443, function () {
-      debug("HTTPS Express Server listening at port", secureServer.address().port);
-    });
+    // Create HTTPS server.
+    const secureServer = https.createServer(options, app);
+
+    secureServer.listen(sport);
+
+    secureServer.on('error', onError.bind(undefined, sport));
+    secureServer.on('listening', onListening.bind(undefined, secureServer));
+
+} catch (err) {
+  if (err.code === 'ENOENT') {
+    debug("There are no SSL certificate files. No HTTPS Server created.");
+  } else {
+    debug(`ERROR: ${err.message || err}.`);
   }
 }
 
@@ -65,57 +71,51 @@ if (app.get('env') === 'production') {
  */
 
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+    var port = parseInt(val, 10);
 
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
 
-  if (port >= 0) {
-    // port number
-    return port;
-  }
+    if (port >= 0) {
+        // port number
+        return port;
+    }
 
-  return false;
+    return false;
 }
 
 /**
  * Event listener for HTTP server "error" event.
  */
+function onError(port, error) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
 
-function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
+    var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
-
-  // handle specific listen errors with friendly messages
-  switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
 }
 
 /**
  * Event listener for HTTP server "listening" event.
  */
-
-function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+function onListening(server) {
+    var addr = server.address();
+    var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
+    debug('HTTP Express Server Listening on ' + bind);
 }
