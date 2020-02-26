@@ -20,6 +20,13 @@ router.post('/login',
     sessionController.create,
     sessionController.createLoginExpires);
 
+// Authenticate with OAuth 2.0 at Github
+router.get('/auth/github',
+    sessionController.authGitHub);
+router.get('/auth/github/callback',
+    sessionController.authGitHubCB,
+    sessionController.createLoginExpires);
+
 // logout - close login session
 router.delete('/login', sessionController.destroy);
 
@@ -76,8 +83,8 @@ router.get('/users',                    userController.index);
 router.get('/users/:userId(\\d+)',      userController.show);
 router.get('/users/new',                userController.new);
 router.post('/users',                   userController.create);
-router.get('/users/:userId(\\d+)/edit', userController.edit);
-router.put('/users/:userId(\\d+)',      userController.update);
+router.get('/users/:userId(\\d+)/edit', userController.isLocalRequired, userController.edit);
+router.put('/users/:userId(\\d+)',      userController.isLocalRequired, userController.update);
 router.delete('/users/:userId(\\d+)',   userController.destroy);
 
 

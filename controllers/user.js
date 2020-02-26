@@ -21,6 +21,20 @@ exports.load = async (req, res, next, userId) => {
 };
 
 
+// MW that allows actions only if the user is local.
+exports.isLocalRequired = (req, res, next) => {
+
+    const isLocal = !!req.load.user.isLocal;
+
+    if (isLocal) {
+        next();
+    } else {
+        console.log('Prohibited operation: The user must be local.');
+        res.send(403);
+    }
+};
+
+
 // GET /users
 exports.index = async (req, res, next) => {
 

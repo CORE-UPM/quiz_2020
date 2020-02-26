@@ -4,7 +4,13 @@ const url = require('url');
 
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
+const GitHubStrategy = require('passport-github2').Strategy;
 
+// GitHub Authentication values should be provided using environment variables, but
+// can also be written here.
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || "*** Your GITHUB_CLIENT_ID ***";
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || "*** Your GITHUB_CLIENT_SECRET ***";
+const GITHUB_CALLBACK_BASE_URL = process.env.GITHUB_CALLBACK_BASE_URL || "http://localhost:3000";
 
 // This variable contains the maximum inactivity time allowed without
 // making requests.
@@ -49,7 +55,6 @@ exports.checkLoginExpires = (req, res, next) => {
     next();
 };
 
-
 /*
  * Serialize user to be saved into req.session.passport.
  * It only saves the id of the user.
@@ -58,7 +63,6 @@ passport.serializeUser((user, done) => {
 
     done(null, user.id);
 });
-
 
 /*
  * Deserialize req.session.passport to create the user.
@@ -101,6 +105,37 @@ passport.use(new LocalStrategy(
 ));
 
 
+// Use the GitHubStrategy within Passport.
+//   Strategies in Passport require a `verify` function, which accept
+//   credentials (in this case, an accessToken, refreshToken, and GitHub
+//   profile), and invoke a callback with a user object.
+passport.use(new GitHubStrategy({
+        clientID: GITHUB_CLIENT_ID,
+        clientSecret: GITHUB_CLIENT_SECRET,
+        callbackURL: `${GITHUB_CALLBACK_BASE_URL}/auth/github/callback`
+    },
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            // The returned GitHub profile represent the logged-in user.
+            // I must associate the GitHub account with a user record in the database,
+            // and return that user.
+            const [user, created] = await models.User.findOrCreate({
+                where: {githubId: profile.id},
+                defaults: {
+                    username: null,
+                    password: "",
+                    githubUsername: profile.username,
+                    isAdmin: false
+                }
+            });
+            done(null, user);
+        } catch(error) {
+            done(error, null);
+        }
+    }
+));
+
+
 // GET /login   -- Login form
 exports.new = (req, res, next) => {
 
@@ -113,6 +148,30 @@ exports.create = passport.authenticate(
     'local',
     {
         failureRedirect: '/login',
+        successFlash: 'Welcome!',
+        failureFlash: 'Authentication has failed. Retry it again.'
+    }
+);
+
+
+// GET /auth/github   -- authenticate at GitHub
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  The first step in GitHub authentication will involve redirecting
+//   the user to github.com.  After authorization, GitHub will redirect the user
+//   back to this application at /login/github/callback
+exports.authGitHub = passport.authenticate('github', {scope: ['user']});
+
+
+// GET /auth/github/callback
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  If authentication fails, the user will be redirected back to the
+//   login page.  Otherwise, the primary route function will be called,
+//   which, in this example, will redirect the user to the home page.
+
+exports.authGitHubCB = passport.authenticate(
+    'github',
+    {
+        failureRedirect: '/auth/github',
         successFlash: 'Welcome!',
         failureFlash: 'Authentication has failed. Retry it again.'
     }

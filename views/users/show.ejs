@@ -5,7 +5,7 @@
 <ul>
     <li>
         User name:
-        <b><%= user.username %></b>
+        <b><%= user.displayNameAuth %></b>
     </li>
 
     <li>
@@ -16,10 +16,12 @@
 </ul>
 
 <p>
-    <a href="/users/<%= user.id %>/edit" class="button">Edit</a>
+    <% if (user.isLocal) { %>
+        <a href="/users/<%= user.id %>/edit" class="button">Edit</a>
+    <% } %>
 
     <a href="/users/<%= user.id %>?_method=DELETE"
-       onClick="return confirm('Delete user: <%= user.username %>');"
+       onClick="return confirm('Delete user: <%= user.displayName %>');"
        class="button">Delete</a>
 </p>
 

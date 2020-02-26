@@ -10,6 +10,19 @@ module.exports = function (sequelize, DataTypes) {
         verifyPassword(password) {
             return crypt.encryptPassword(password, this.salt) === this.password;
         }
+
+        get displayName() {
+            return this.username || this.githubUsername || "Unknown";
+        }
+
+        get displayNameAuth() {
+            return this.username && this.username+"(local)" || this.githubUsername && this.githubUsername+"(github)" || "Unknown";
+        }
+
+        // true if it is a local authenticated user
+        get isLocal() {
+            return !this.githubId;
+        }
     }
 
     User.init({
@@ -29,6 +42,15 @@ module.exports = function (sequelize, DataTypes) {
         },
         salt: {
             type: DataTypes.STRING
+        },
+        githubId: {
+            type: DataTypes.INTEGER,
+            unique: true
+        },
+        githubUsername: {
+            type: DataTypes.STRING,
+            unique: true,
+            validate: {notEmpty: {msg: "Username must not be empty."}}
         },
         isAdmin: {
             type: DataTypes.BOOLEAN,

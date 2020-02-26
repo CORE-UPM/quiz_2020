@@ -61,7 +61,7 @@ app.use(function(req, res, next) {
     // To use req.loginUser in the views
     res.locals.loginUser = req.loginUser && {
         id: req.loginUser.id,
-        username: req.loginUser.username,
+        username: req.loginUser.displayName,
         isAdmin: req.loginUser.isAdmin
     };
 
