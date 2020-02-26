@@ -3,6 +3,31 @@ const {models} = require("../models");
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 
+// GitHub Authentication values are provided using environment variables.
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
+
+// Twitter Authentication values are provided using environment variables.
+const TWITTER_CONSUMER_KEY = process.env.TWITTER_CONSUMER_KEY;
+const TWITTER_CONSUMER_SECRET = process.env.TWITTER_CONSUMER_SECRET;
+
+// Google Authentication values are provided using environment variables.
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID ;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+
+// Linkedid Authentication values are provided using environment variables.
+const LINKEDIN_API_KEY = process.env.LINKEDIN_API_KEY;
+const LINKEDIN_SECRET_KEY = process.env.LINKEDIN_SECRET_KEY;
+
+// Base URL of the Callback URL
+const CALLBACK_BASE_URL = process.env.CALLBACK_BASE_URL || "http://localhost:3000";
+
+
+const GitHubStrategy = GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET && require('passport-github2').Strategy;
+const TwitterStrategy = TWITTER_CONSUMER_KEY && TWITTER_CONSUMER_SECRET && require('passport-twitter').Strategy;
+const GoogleStrategy = GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET && require('passport-google-oauth20').Strategy;
+const LinkedinStrategy = LINKEDIN_API_KEY && LINKEDIN_SECRET_KEY && require('passport-linkedin-oauth2').Strategy;
+
 
 // This variable contains the maximum inactivity time allowed without
 // making requests.
@@ -99,10 +124,141 @@ passport.use(new LocalStrategy(
 ));
 
 
+// Use the GitHubStrategy within Passport.
+//   Strategies in Passport require a `verify` function, which accept
+//   credentials (in this case, an accessToken, refreshToken, and GitHub
+//   profile), and invoke a callback with a user object.
+GitHubStrategy && passport.use(new GitHubStrategy({
+        clientID: GITHUB_CLIENT_ID,
+        clientSecret: GITHUB_CLIENT_SECRET,
+        callbackURL: `${CALLBACK_BASE_URL}/auth/github/callback`
+    },
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            // The returned GitHub profile represent the logged-in user.
+            // I must associate the GitHub account with a user record in the database,
+            // and return that user.
+            const [user, created] = await models.User.findOrCreate({
+                where: {
+                    accountTypeId: models.User.accountTypeId("github"),
+                    profileId: profile.id
+                },
+                defaults: {
+                    profileName: profile.username
+                }
+            });
+            done(null, user);
+        } catch(error) {
+            done(error, null);
+        }
+    }
+));
+
+
+// Use the TwitterStrategy within Passport (OAuth 1).
+//   Strategies in Passport require a `verify` function, which accept
+//   credentials (in this case, an token, tokenSecret, and Twitter
+//   profile), and invoke a callback with a user object.
+TwitterStrategy && passport.use(new TwitterStrategy({
+        consumerKey: TWITTER_CONSUMER_KEY,
+        consumerSecret: TWITTER_CONSUMER_SECRET,
+        callbackURL: `${CALLBACK_BASE_URL}/auth/twitter/callback`
+    },
+    async (token, tokenSecret, profile, done) => {
+        try {
+            // The returned Twitter profile represent the logged-in user.
+            // I must associate the Twitter account with a user record in the database,
+            // and return that user.
+            const [user, created] = await models.User.findOrCreate({
+                where: {
+                    accountTypeId: models.User.accountTypeId("twitter"),
+                    profileId: profile.id
+                },
+                defaults: {
+                    profileName: profile.username
+                }
+            });
+            done(null, user);
+        } catch(error) {
+            done(error, null);
+        }
+    }
+));
+
+
+// Use the GoogleStrategy within Passport.
+//   Strategies in Passport require a `verify` function, which accept
+//   credentials (in this case, an accessToken, refreshToken, and GitHub
+//   profile), and invoke a callback with a user object.
+GoogleStrategy && passport.use(new GoogleStrategy({
+        clientID: GOOGLE_CLIENT_ID,
+        clientSecret: GOOGLE_CLIENT_SECRET,
+        callbackURL: `${CALLBACK_BASE_URL}/auth/google/callback`
+    },
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            // The returned Google profile represent the logged-in user.
+            // I must associate the Google account with a user record in the database,
+            // and return that user.
+            const [user, created] = await models.User.findOrCreate({
+                where: {
+                    accountTypeId: models.User.accountTypeId("google"),
+                    profileId: profile.id
+                },
+                defaults: {
+                    profileName: profile.displayName.replace(/ /g,"")
+                }
+            });
+            done(null, user);
+        } catch(error) {
+            done(error, null);
+        }
+    }
+));
+
+
+// Use the LinkedinStrategy within Passport.
+//   Strategies in Passport require a `verify` function, which accept
+//   credentials (in this case, an accessToken, refreshToken, and Linkedin
+//   profile), and invoke a callback with a user object.
+LinkedinStrategy && passport.use(new LinkedinStrategy({
+        clientID: LINKEDIN_API_KEY,
+        clientSecret: LINKEDIN_SECRET_KEY,
+        callbackURL: `${CALLBACK_BASE_URL}/auth/linkedin/callback`,
+        scope: ['r_emailaddress', 'r_liteprofile'],
+        state: true
+    },
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            // The returned Linkedin profile represent the logged-in user.
+            // I must associate the Linkedin account with a user record in the database,
+            // and return that user.
+            const [user, created] = await models.User.findOrCreate({
+                where: {
+                    accountTypeId: models.User.accountTypeId("linkedin"),
+                    profileId: profile.id
+                },
+                defaults: {
+                    profileName: profile.displayName.replace(/ /g,"")
+                }
+            });
+            done(null, user);
+        } catch(error) {
+            done(error, null);
+        }
+    }
+));
+
+
 // GET /login   -- Login form
 exports.new = (req, res, next) => {
 
-    res.render('session/new');
+    res.render('session/new', {
+        loginWithGitHub: !!GitHubStrategy,
+        loginWithTwitter: !!TwitterStrategy,
+        loginWithGoogle: !!GoogleStrategy,
+        loginWithLinkedin: !!LinkedinStrategy
+    });
 };
 
 
@@ -111,6 +267,72 @@ exports.create = passport.authenticate(
     'local',
     {
         failureRedirect: '/login',
+        successFlash: 'Welcome!',
+        failureFlash: 'Authentication has failed. Retry it again.'
+    }
+);
+
+
+// GET /auth/github   -- authenticate at GitHub
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  The first step in GitHub authentication will involve redirecting
+//   the user to github.com.  After authorization, GitHub will redirect the user
+//   back to this application at /login/github/callback
+exports.authGitHub = GitHubStrategy && passport.authenticate('github', {scope: ['user']});
+
+
+// GET /auth/github/callback
+//   Use passport.authenticate() as route middleware to authenticate the
+//   request.  If authentication fails, the user will be redirected back to the
+//   login page.  Otherwise, the primary route function will be called,
+//   which, in this example, will redirect the user to the home page.
+
+exports.authGitHubCB = GitHubStrategy && passport.authenticate(
+    'github',
+    {
+        failureRedirect: '/auth/github',
+        successFlash: 'Welcome!',
+        failureFlash: 'Authentication has failed. Retry it again.'
+    }
+);
+
+
+// GET /auth/twitter   -- authenticate at GitHub
+exports.authTwitter = TwitterStrategy && passport.authenticate('twitter');
+
+// GET /auth/twitter/callback
+exports.authTwitterCB = TwitterStrategy && passport.authenticate(
+    'twitter',
+    {
+        failureRedirect: '/auth/twitter',
+        successFlash: 'Welcome!',
+        failureFlash: 'Authentication has failed. Retry it again.'
+    }
+);
+
+
+// GET /auth/google   -- authenticate at Google
+exports.authGoogle = GoogleStrategy && passport.authenticate('google', {scope: ['profile']});
+
+// GET /auth/google/callback
+exports.authGoogleCB = GoogleStrategy && passport.authenticate(
+    'google',
+    {
+        failureRedirect: '/auth/google',
+        successFlash: 'Welcome!',
+        failureFlash: 'Authentication has failed. Retry it again.'
+    }
+);
+
+
+// GET /auth/linkedin   -- authenticate at Linkedin
+exports.authLinkedin = LinkedinStrategy && passport.authenticate('linkedin');
+
+// GET /auth/google/callback
+exports.authLinkedinCB = LinkedinStrategy && passport.authenticate(
+    'linkedin',
+    {
+        failureRedirect: '/auth/linkedin',
         successFlash: 'Welcome!',
         failureFlash: 'Authentication has failed. Retry it again.'
     }

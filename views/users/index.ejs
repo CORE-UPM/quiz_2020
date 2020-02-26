@@ -10,7 +10,9 @@
                 <%= users[i].isAdmin ? "(admin)" : "" %>
             </td>
             <td>
-                <a href="/users/<%= users[i].id %>/edit" class="button">Edit</a>
+                <% if (!users[i].accountTypeId) { %>
+                    <a href="/users/<%= users[i].id %>/edit" class="button">Edit</a>
+                <% } %>
             </td>
             <td>
                 <a href="/users/<%= users[i].id %>?_method=DELETE"

@@ -1,3 +1,12 @@
+<section class="right">
+    Login with:
+
+    <%- loginWithGitHub   ? '<a href="/auth/github"><img src="/images/login/github.png" class="loginicon" alt="GitHub"></a>' : "" %>
+    <%- loginWithTwitter  ? '<a href="/auth/twitter"><img src="/images/login/twitter.png" class="loginicon" alt="Twitter"></a>' : "" %>
+    <%- loginWithGoogle   ? '<a href="/auth/google"><img src="/images/login/google.png" class="loginicon" alt="Google"></a>' : "" %>
+    <%- loginWithLinkedin ? '<a href="/auth/linkedin"><img src="/images/login/linkedin.png" class="loginicon" alt="Linkedin"></a>' : "" %>
+</section>
+
 <section>
 
     <h1>Login</h1>
@@ -22,7 +31,7 @@
 
     </form>
 
-    <hr/>
+    <hr />
 
     <a href="/users/new">Register local account</a>
 </section>

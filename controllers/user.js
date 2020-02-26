@@ -21,6 +21,18 @@ exports.load = async (req, res, next, userId) => {
 };
 
 
+// MW that allows actions only if the user account is local.
+exports.isLocalRequired = (req, res, next) => {
+
+    if (!req.load.user.accountTypeId) {
+        next();
+    } else {
+        console.log('Prohibited operation: The user account must be local.');
+        res.send(403);
+    }
+};
+
+
 // GET /users
 exports.index = async (req, res, next) => {
 
