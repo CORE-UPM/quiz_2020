@@ -13,6 +13,9 @@
           type='text/css'
           media='only screen and (max-width: 480px)'
           href='/stylesheets/smartphone.css'/>
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.css" />
+
 </head>
 <body>
 <div id="page">
@@ -34,5 +37,18 @@
             What is a Quiz?</a>
     </footer>
 </div>
-</body>
+
+<script src="https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.js" data-cfasync="false"></script>
+<script>
+    window.cookieconsent.initialise({
+        "palette": {
+            "popup": {
+                "background": "#252e39"
+            },
+            "button": {
+                "background": "#14a7d0"
+            }
+        }
+    });
+</script></body>
 </html>
